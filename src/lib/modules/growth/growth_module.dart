@@ -20,7 +20,7 @@ class GrowthModule implements BulterModule {
   Color get brandColor => BulterColors.growth;
 
   @override
-  String get iconName => 'target';
+  String get iconName => 'growth';
 
   @override
   String get entryRoute => '/growth';
@@ -33,25 +33,25 @@ class GrowthModule implements BulterModule {
     ModuleTab(
       id: 'goals',
       label: '目标',
-      icon: Icons.flag_outlined,
+      iconName: 'modules/growth.svg',
       builder: _placeholder,
     ),
     ModuleTab(
       id: 'projects',
       label: '项目',
-      icon: Icons.view_kanban_rounded,
+      iconName: 'modules/briefcase.svg',
       builder: _placeholder,
     ),
     ModuleTab(
       id: 'learning',
       label: '学习',
-      icon: Icons.school_outlined,
+      iconName: 'modules/report.svg',
       builder: _placeholder,
     ),
     ModuleTab(
       id: 'resume',
       label: '简历',
-      icon: Icons.description_outlined,
+      iconName: 'common/info.svg',
       builder: _placeholder,
     ),
   ];

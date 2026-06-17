@@ -96,13 +96,13 @@ typedef DaoFactory<T> = T Function(QueryExecutor db);
 class ModuleTab {
   final String id;
   final String label;
-  final IconData icon;
+  final String iconName;
   final WidgetBuilder builder;
 
   const ModuleTab({
     required this.id,
     required this.label,
-    required this.icon,
+    required this.iconName,
     required this.builder,
   });
 }

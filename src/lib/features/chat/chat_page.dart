@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 
-import '../../components/empty_state.dart';
+import '../../ai/ai_service.dart';
+import '../../ai/memory/short_term.dart';
+import '../../ai/model_registry.dart';
+import '../../components/svg_icon.dart';
 import '../../theme/tokens.dart';
 
-/// AI 对话页（原型：phone-02-ai-chat.png）。
+/// AI 对话页（Step 4：接入真实 LLM 流式对话）。
 ///
 /// 布局（自上而下）：
-///   1) 顶部状态条：在线 · 3 件事已被追踪
+///   1) 顶部状态条：在线 · N 件事已被追踪
 ///   2) 消息流（AI 左侧浅色泡 / 用户右侧纯黑泡）
-///   3) 黑色 CTA 胶囊按钮 "先点下今天收支持页"
-///   4) 3 张数据卡（总支出 / 餐饮 / 预算剩余）
-///   5) AI 概览卡（带橙底"查看详情 →"链接）
-///   6) 底部输入区（单行输入 + 圆形黑色发送）
+///   3) 黑色 CTA 胶囊按钮 / 错误占位 / 加载三态
+///   4) 底部输入区（单行输入 + 圆形黑色发送）
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
 
@@ -22,23 +23,21 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   final _controller = TextEditingController();
   final _scroll = ScrollController();
-  final List<_ChatItem> _items = [
-    _ChatItem.bubble(_Role.assistant, '下午好，小明。\n我用把今天的 3 件事整理好了。'),
-    _CtaPillItem(label: '先点下今天收支持页'),
-    _StatCardsItem(
-      cards: [
-        _StatCard(label: '总支出', value: '¥4,820', trend: ''),
-        _StatCard(label: '餐饮', value: '↑18%', trend: '超预算'),
-        _StatCard(label: '预算剩余', value: '¥680', trend: ''),
-      ],
-    ),
-    _OverviewItem(
-      description: '餐饮支出比上月多 18%，\n建议食堂外卖频次（12 次/月）',
-      action: '查看详情',
-    ),
-    _ChatItem.bubble(_Role.user, '我今天中午吃了顿烧烤'),
-    _ChatItem.bubble(_Role.assistant, '记下了：8 月 7 日午餐 烧烤 ¥120。\n已记入【财富】模块。'),
-  ];
+  final _memory = ShortTermMemory(maxRounds: 20);
+  final List<_ChatItem> _items = [];
+  bool _sending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // 起始欢迎（不计入 rounds）
+    _items.add(
+      _ChatItem.bubble(
+        _Role.assistant,
+        '下午好，我是 Buler。\n你已经 3 天没记账了，需要我帮你回忆一下吗？',
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -47,43 +46,101 @@ class _ChatPageState extends State<ChatPage> {
     super.dispose();
   }
 
-  void _send() {
+  Future<void> _send() async {
+    if (_sending) return;
     final text = _controller.text.trim();
     if (text.isEmpty) return;
     setState(() {
       _items.add(_ChatItem.bubble(_Role.user, text));
-      // Step 4 替换为真实 LLM 流式输出
-      _items.add(
-        _ChatItem.bubble(
-          _Role.assistant,
-          '（占位回复）已收到：$text\n真实 AI 对话将在 Step 4 接入。',
-        ),
-      );
+      _sending = true;
       _controller.clear();
     });
-    Future.delayed(const Duration(milliseconds: 50), () {
+    _scrollToBottom();
+
+    // 写入短记忆
+    _memory.append(
+      ChatMessage(
+        role: ChatRole.user,
+        content: text,
+        createdAt: DateTime.now(),
+      ),
+    );
+
+    // 预占位 assistant 泡（流式更新 content）
+    final placeholder = _ChatItem.bubble(_Role.assistant, '');
+    setState(() => _items.add(placeholder));
+
+    String accumulated = '';
+    await AiService.instance.streamCompletion(
+      memory: _memory,
+      callback: (event) {
+        if (!mounted) return;
+        if (event.isError) {
+          final err = event.error;
+          String msg = 'AI 调用失败';
+          if (err is AiError) msg = err.message;
+          setState(() {
+            placeholder.content = msg;
+            placeholder.isError = true;
+            _sending = false;
+          });
+          return;
+        }
+        if (event.delta.isNotEmpty) {
+          accumulated += event.delta;
+          setState(() => placeholder.content = accumulated);
+          _memory.updateLastAssistantContent(event.delta);
+          _scrollToBottom();
+        }
+        if (event.done) {
+          setState(() {
+            _sending = false;
+            if (accumulated.isEmpty && !placeholder.isError) {
+              placeholder.content = '（无回复，请检查网络或 API Key）';
+            }
+          });
+          if (accumulated.isNotEmpty) {
+            _memory.append(
+              ChatMessage(
+                role: ChatRole.assistant,
+                content: accumulated,
+                createdAt: DateTime.now(),
+              ),
+            );
+          }
+        }
+      },
+    );
+  }
+
+  void _scrollToBottom() {
+    Future.delayed(const Duration(milliseconds: 30), () {
       if (_scroll.hasClients) {
         _scroll.animateTo(
           _scroll.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 250),
+          duration: const Duration(milliseconds: 200),
           curve: Curves.easeOut,
         );
       }
     });
   }
 
+  void _openModelConfig() {
+    Navigator.of(context).pushNamed('/settings/model');
+  }
+
   @override
   Widget build(BuildContext context) {
+    final hasKey = ModelRegistry.instance.hasApiKey;
     return Column(
       children: [
-        const _StatusBar(),
+        _StatusBar(
+          trackedCount: _items.where((i) => i.role == _Role.user).length,
+          onConfigure: _openModelConfig,
+        ),
         Expanded(
           child: _items.isEmpty
-              ? const EmptyState(
-                  icon: Icons.chat_bubble_outline_rounded,
-                  title: '开始一段对话',
-                  hint: '可以问"我最近花了多少钱"，也可以直接说"今天和小王吃了顿饭"',
-                )
+              ? const _EmptyChat()
               : ListView.builder(
                   controller: _scroll,
                   padding: const EdgeInsets.fromLTRB(
@@ -93,105 +150,164 @@ class _ChatPageState extends State<ChatPage> {
                     BulterSpacing.l,
                   ),
                   itemCount: _items.length,
-                  itemBuilder: (context, i) => _buildItem(_items[i]),
+                  itemBuilder: (context, i) => _items[i],
                 ),
         ),
-        _InputBar(controller: _controller, onSend: _send),
+        if (!hasKey) _NoApiKeyBanner(onTap: _openModelConfig),
+        _InputBar(controller: _controller, onSend: _send, enabled: !_sending),
       ],
     );
   }
+}
 
-  Widget _buildItem(_ChatItem item) {
-    if (item is _BubbleItem) {
-      return _Bubble(message: item.message);
-    }
-    if (item is _CtaPillItem) {
-      return _CtaPill(label: item.label);
-    }
-    if (item is _StatCardsItem) {
-      return _StatCards(cards: item.cards);
-    }
-    if (item is _OverviewItem) {
-      return _OverviewCard(description: item.description, action: item.action);
-    }
-    return const SizedBox.shrink();
+class _EmptyChat extends StatelessWidget {
+  const _EmptyChat();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(BulterSpacing.xxl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: const [
+            SvgIcon(
+              'chat/chat-bubble-outline.svg',
+              size: 56,
+              color: BulterColors.textTertiary,
+            ),
+            SizedBox(height: BulterSpacing.l),
+            Text(
+              '开始一段对话',
+              style: TextStyle(
+                fontSize: BulterFontSize.titleS,
+                fontWeight: BulterFontWeight.semibold,
+                color: BulterColors.textPrimary,
+              ),
+            ),
+            SizedBox(height: BulterSpacing.s),
+            Text(
+              '可以问"我最近花了多少钱"，\n也可以直接说"今天和小王吃了顿饭"',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: BulterFontSize.body,
+                color: BulterColors.textSecondary,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _NoApiKeyBanner extends StatelessWidget {
+  final VoidCallback onTap;
+  const _NoApiKeyBanner({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: BulterColors.wealth.withValues(alpha: 0.14),
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: BulterSpacing.l,
+            vertical: BulterSpacing.s,
+          ),
+          child: Row(
+            children: [
+              const SvgIcon(
+                'common/info.svg',
+                size: 16,
+                color: BulterColors.wealth,
+              ),
+              const SizedBox(width: BulterSpacing.s),
+              const Expanded(
+                child: Text(
+                  '尚未配置 API Key，点击前往设置',
+                  style: TextStyle(
+                    fontSize: BulterFontSize.footnote,
+                    color: BulterColors.textPrimary,
+                  ),
+                ),
+              ),
+              const SvgIcon(
+                'common/chevron-right.svg',
+                size: 16,
+                color: BulterColors.textSecondary,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
 enum _Role { user, assistant }
 
-class _ChatItem {
-  const _ChatItem();
-  factory _ChatItem.bubble(_Role role, String content) = _BubbleItem.fromValues;
-}
-
-class _BubbleItem extends _ChatItem {
-  final _ChatMessage message;
-  _BubbleItem(this.message);
-  factory _BubbleItem.fromValues(_Role role, String content) =>
-      _BubbleItem(_ChatMessage(role: role, content: content));
-}
-
-class _CtaPillItem extends _ChatItem {
-  final String label;
-  const _CtaPillItem({required this.label});
-}
-
-class _StatCard {
-  final String label;
-  final String value;
-  final String trend;
-  const _StatCard({
-    required this.label,
-    required this.value,
-    required this.trend,
-  });
-}
-
-class _StatCardsItem extends _ChatItem {
-  final List<_StatCard> cards;
-  const _StatCardsItem({required this.cards});
-}
-
-class _OverviewItem extends _ChatItem {
-  final String description;
-  final String action;
-  const _OverviewItem({required this.description, required this.action});
-}
-
-class _ChatMessage {
+// ignore: must_be_immutable
+class _ChatItem extends StatelessWidget {
   final _Role role;
-  final String content;
-  _ChatMessage({required this.role, required this.content});
-}
+  String content;
+  bool isError;
+  bool streaming;
 
-class _StatusBar extends StatelessWidget {
-  const _StatusBar();
+  _ChatItem.bubble(this.role, this.content)
+    : isError = false,
+      streaming = false;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: BulterSpacing.l,
-        vertical: BulterSpacing.s,
-      ),
+    if (role == _Role.assistant) {
+      return _AssistantBubble(
+        content: content,
+        streaming: streaming,
+        isError: isError,
+      );
+    }
+    return _UserBubble(content: content);
+  }
+}
+
+class _UserBubble extends StatelessWidget {
+  final String content;
+  const _UserBubble({required this.content});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: BulterSpacing.m),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: const BoxDecoration(
-              color: BulterColors.success,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: BulterSpacing.s),
-          const Text(
-            '在线 · 3 件事已被追踪',
-            style: TextStyle(
-              fontSize: BulterFontSize.footnote,
-              color: BulterColors.textSecondary,
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: BulterSpacing.l,
+                vertical: BulterSpacing.m,
+              ),
+              constraints: const BoxConstraints(maxWidth: 280),
+              decoration: BoxDecoration(
+                color: BulterColors.cta,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(BulterRadius.l),
+                  topRight: Radius.circular(BulterRadius.l),
+                  bottomLeft: Radius.circular(BulterRadius.l),
+                  bottomRight: Radius.circular(4),
+                ),
+              ),
+              child: Text(
+                content,
+                style: const TextStyle(
+                  color: BulterColors.ctaText,
+                  fontSize: BulterFontSize.body,
+                  height: 1.45,
+                ),
+              ),
             ),
           ),
         ],
@@ -200,19 +316,27 @@ class _StatusBar extends StatelessWidget {
   }
 }
 
-class _Bubble extends StatelessWidget {
-  final _ChatMessage message;
-  const _Bubble({required this.message});
+class _AssistantBubble extends StatelessWidget {
+  final String content;
+  final bool streaming;
+  final bool isError;
+  const _AssistantBubble({
+    required this.content,
+    required this.streaming,
+    required this.isError,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final isUser = message.role == _Role.user;
+    if (content.isEmpty && streaming) {
+      return const Padding(
+        padding: EdgeInsets.only(bottom: BulterSpacing.m),
+        child: Row(children: [_TypingDots()]),
+      );
+    }
     return Padding(
       padding: const EdgeInsets.only(bottom: BulterSpacing.m),
       child: Row(
-        mainAxisAlignment: isUser
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Flexible(
@@ -223,22 +347,27 @@ class _Bubble extends StatelessWidget {
               ),
               constraints: const BoxConstraints(maxWidth: 280),
               decoration: BoxDecoration(
-                color: isUser ? BulterColors.cta : BulterColors.surface,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(BulterRadius.l),
-                  topRight: const Radius.circular(BulterRadius.l),
-                  bottomLeft: Radius.circular(isUser ? BulterRadius.l : 4),
-                  bottomRight: Radius.circular(isUser ? 4 : BulterRadius.l),
+                color: isError
+                    ? BulterColors.error.withValues(alpha: 0.10)
+                    : BulterColors.surface,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(BulterRadius.l),
+                  topRight: Radius.circular(BulterRadius.l),
+                  bottomLeft: Radius.circular(4),
+                  bottomRight: Radius.circular(BulterRadius.l),
                 ),
-                border: isUser
-                    ? null
+                border: isError
+                    ? Border.all(
+                        color: BulterColors.error.withValues(alpha: 0.4),
+                        width: 0.5,
+                      )
                     : Border.all(color: BulterColors.divider, width: 0.5),
               ),
               child: Text(
-                message.content,
+                content,
                 style: TextStyle(
-                  color: isUser
-                      ? BulterColors.ctaText
+                  color: isError
+                      ? BulterColors.error
                       : BulterColors.textPrimary,
                   fontSize: BulterFontSize.body,
                   height: 1.45,
@@ -252,184 +381,133 @@ class _Bubble extends StatelessWidget {
   }
 }
 
-class _CtaPill extends StatelessWidget {
-  final String label;
-  const _CtaPill({required this.label});
+class _TypingDots extends StatefulWidget {
+  const _TypingDots();
+
+  @override
+  State<_TypingDots> createState() => _TypingDotsState();
+}
+
+class _TypingDotsState extends State<_TypingDots>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: BulterSpacing.l),
-      child: Align(
-        alignment: Alignment.center,
-        child: Material(
-          color: BulterColors.cta,
-          borderRadius: BorderRadius.circular(BulterRadius.pill),
-          child: InkWell(
-            borderRadius: BorderRadius.circular(BulterRadius.pill),
-            onTap: () {},
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: BulterSpacing.xl,
-                vertical: BulterSpacing.m,
-              ),
-              child: Text(
-                label,
-                style: const TextStyle(
-                  color: BulterColors.ctaText,
-                  fontSize: BulterFontSize.body,
-                  fontWeight: BulterFontWeight.semibold,
-                ),
-              ),
-            ),
+    return AnimatedBuilder(
+      animation: _ctl,
+      builder: (_, __) {
+        return Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: BulterSpacing.l,
+            vertical: BulterSpacing.m,
           ),
-        ),
-      ),
+          decoration: BoxDecoration(
+            color: BulterColors.surface,
+            borderRadius: BorderRadius.circular(BulterRadius.l),
+            border: Border.all(color: BulterColors.divider, width: 0.5),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(3, (i) {
+              final t = ((_ctl.value + i / 3) % 1.0);
+              final scale =
+                  0.7 + 0.3 * (1 - (t - 0.5).abs() * 2).clamp(0.0, 1.0);
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: BulterColors.textTertiary.withValues(
+                      alpha: 0.4 + 0.5 * scale,
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              );
+            }),
+          ),
+        );
+      },
     );
   }
 }
 
-class _StatCards extends StatelessWidget {
-  final List<_StatCard> cards;
-  const _StatCards({required this.cards});
+class _StatusBar extends StatelessWidget {
+  final int trackedCount;
+  final VoidCallback onConfigure;
+  const _StatusBar({required this.trackedCount, required this.onConfigure});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: BulterSpacing.l),
+    final hasKey = ModelRegistry.instance.hasApiKey;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: BulterSpacing.l,
+        vertical: BulterSpacing.s,
+      ),
       child: Row(
         children: [
-          for (var i = 0; i < cards.length; i++) ...[
-            Expanded(child: _StatCardView(card: cards[i])),
-            if (i != cards.length - 1) const SizedBox(width: BulterSpacing.s),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _StatCardView extends StatelessWidget {
-  final _StatCard card;
-  const _StatCardView({required this.card});
-
-  @override
-  Widget build(BuildContext context) {
-    final isWarning = card.trend == '超预算';
-    return Container(
-      padding: const EdgeInsets.all(BulterSpacing.m),
-      decoration: BoxDecoration(
-        color: BulterColors.surface,
-        borderRadius: BorderRadius.circular(BulterRadius.l),
-        border: Border.all(color: BulterColors.divider, width: 0.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            card.label,
-            style: const TextStyle(
-              fontSize: BulterFontSize.caption,
-              color: BulterColors.textSecondary,
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: hasKey ? BulterColors.success : BulterColors.textTertiary,
+              shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(height: BulterSpacing.xs + 2),
-          Text(
-            card.value,
-            style: TextStyle(
-              fontSize: BulterFontSize.titleS,
-              fontWeight: BulterFontWeight.bold,
-              color: isWarning ? BulterColors.wealth : BulterColors.textPrimary,
-            ),
-          ),
-          if (card.trend.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            Text(
-              card.trend,
-              style: const TextStyle(
-                fontSize: BulterFontSize.caption,
-                color: BulterColors.wealth,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _OverviewCard extends StatelessWidget {
-  final String description;
-  final String action;
-  const _OverviewCard({required this.description, required this.action});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: BulterSpacing.l),
-      child: Container(
-        padding: const EdgeInsets.all(BulterSpacing.l),
-        decoration: BoxDecoration(
-          color: BulterColors.surface,
-          borderRadius: BorderRadius.circular(BulterRadius.l),
-          border: Border.all(color: BulterColors.divider, width: 0.5),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '本月支出概览',
+          const SizedBox(width: BulterSpacing.s),
+          Expanded(
+            child: Text(
+              hasKey ? '在线 · $trackedCount 件事已被追踪' : '未配置 API Key · 点击设置',
               style: TextStyle(
-                fontSize: BulterFontSize.body,
-                fontWeight: BulterFontWeight.semibold,
-                color: BulterColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: BulterSpacing.s),
-            Text(
-              description,
-              style: const TextStyle(
                 fontSize: BulterFontSize.footnote,
-                color: BulterColors.textSecondary,
-                height: 1.5,
+                color: hasKey
+                    ? BulterColors.textSecondary
+                    : BulterColors.wealth,
+                fontWeight: hasKey
+                    ? BulterFontWeight.regular
+                    : BulterFontWeight.semibold,
               ),
             ),
-            const SizedBox(height: BulterSpacing.m),
-            Material(
-              color: BulterColors.wealth,
-              borderRadius: BorderRadius.circular(BulterRadius.pill),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(BulterRadius.pill),
-                onTap: () {},
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: BulterSpacing.l,
-                    vertical: BulterSpacing.s,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        action,
-                        style: const TextStyle(
-                          color: BulterColors.ctaText,
-                          fontSize: BulterFontSize.footnote,
-                          fontWeight: BulterFontWeight.semibold,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      const Icon(
-                        Icons.arrow_forward_rounded,
-                        color: BulterColors.ctaText,
-                        size: 14,
-                      ),
-                    ],
+          ),
+          Material(
+            color: BulterColors.surface,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: onConfigure,
+              child: const SizedBox(
+                width: 28,
+                height: 28,
+                child: Center(
+                  child: SvgIcon(
+                    'common/tune.svg',
+                    size: 14,
+                    color: BulterColors.textPrimary,
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -438,7 +516,12 @@ class _OverviewCard extends StatelessWidget {
 class _InputBar extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onSend;
-  const _InputBar({required this.controller, required this.onSend});
+  final bool enabled;
+  const _InputBar({
+    required this.controller,
+    required this.onSend,
+    required this.enabled,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -472,7 +555,9 @@ class _InputBar extends StatelessWidget {
                 child: TextField(
                   controller: controller,
                   textInputAction: TextInputAction.send,
-                  onSubmitted: (_) => onSend(),
+                  onSubmitted: (_) {
+                    if (enabled) onSend();
+                  },
                   decoration: const InputDecoration(
                     hintText: '说点什么…',
                     border: InputBorder.none,
@@ -484,18 +569,20 @@ class _InputBar extends StatelessWidget {
             ),
             const SizedBox(width: BulterSpacing.s),
             Material(
-              color: BulterColors.cta,
+              color: enabled ? BulterColors.cta : BulterColors.textTertiary,
               shape: const CircleBorder(),
               child: InkWell(
                 customBorder: const CircleBorder(),
-                onTap: onSend,
+                onTap: enabled ? onSend : null,
                 child: const SizedBox(
                   width: 40,
                   height: 40,
-                  child: Icon(
-                    Icons.arrow_upward_rounded,
-                    color: BulterColors.ctaText,
-                    size: 20,
+                  child: Center(
+                    child: SvgIcon(
+                      'common/arrow-up.svg',
+                      size: 20,
+                      color: BulterColors.ctaText,
+                    ),
                   ),
                 ),
               ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/tokens.dart';
+import 'svg_icon.dart';
 
 /// AI 洞察大卡（主页 Bento 第 1 张）。
 class AiInsightCard extends StatelessWidget {
@@ -40,10 +41,12 @@ class AiInsightCard extends StatelessWidget {
                       color: BulterColors.butler,
                       borderRadius: BorderRadius.circular(BulterRadius.s),
                     ),
-                    child: const Icon(
-                      Icons.auto_awesome,
-                      color: BulterColors.cta,
-                      size: 16,
+                    child: const Center(
+                      child: SvgIcon(
+                        'common/sparkles.svg',
+                        size: 16,
+                        color: BulterColors.cta,
+                      ),
                     ),
                   ),
                   const SizedBox(width: BulterSpacing.s),

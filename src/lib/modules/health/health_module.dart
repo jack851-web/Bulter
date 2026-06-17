@@ -20,7 +20,7 @@ class HealthModule implements BulterModule {
   Color get brandColor => BulterColors.health;
 
   @override
-  String get iconName => 'heart-pulse';
+  String get iconName => 'health';
 
   @override
   String get entryRoute => '/health';
@@ -33,25 +33,25 @@ class HealthModule implements BulterModule {
     ModuleTab(
       id: 'records',
       label: '记录',
-      icon: Icons.timeline_rounded,
+      iconName: 'modules/timeline.svg',
       builder: _placeholder,
     ),
     ModuleTab(
       id: 'reports',
       label: '体检',
-      icon: Icons.assignment_rounded,
+      iconName: 'modules/report.svg',
       builder: _placeholder,
     ),
     ModuleTab(
       id: 'trends',
       label: '趋势',
-      icon: Icons.show_chart_rounded,
+      iconName: 'modules/chart.svg',
       builder: _placeholder,
     ),
     ModuleTab(
       id: 'devices',
       label: '设备',
-      icon: Icons.watch_rounded,
+      iconName: 'modules/chip.svg',
       builder: _placeholder,
     ),
   ];

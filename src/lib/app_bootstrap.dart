@@ -1,3 +1,4 @@
+import 'ai/model_registry.dart';
 import 'ai/sub_agents/sub_agent_registry.dart';
 import 'ai/tools/tool_registry.dart';
 import 'db/app_database.dart';
@@ -23,6 +24,9 @@ import 'storage/storage_init.dart';
 Future<void> bootstrapApp({String? subdir}) async {
   // 1. Hive 初始化（必须在 runApp 之前；模块按需懒打开自己的 Box）
   await initStorage(subdir: subdir);
+
+  // 1.5 加载 AI 模型配置（用户当前选择 + 各 vendor 的 API Key）
+  await ModelRegistry.instance.load();
 
   // 2. 数据库迁移：开库前先对比 schemaVersion。
   //    旧库先备份再迁移；新库直接 createAll。

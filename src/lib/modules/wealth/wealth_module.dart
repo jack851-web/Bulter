@@ -20,7 +20,7 @@ class WealthModule implements BulterModule {
   Color get brandColor => BulterColors.wealth;
 
   @override
-  String get iconName => 'wallet';
+  String get iconName => 'wealth';
 
   @override
   String get entryRoute => '/wealth';
@@ -33,25 +33,25 @@ class WealthModule implements BulterModule {
     ModuleTab(
       id: 'overview',
       label: '总览',
-      icon: Icons.dashboard_outlined,
+      iconName: 'modules/chart.svg',
       builder: _placeholder,
     ),
     ModuleTab(
       id: 'records',
       label: '账单',
-      icon: Icons.receipt_long_rounded,
+      iconName: 'common/receipt.svg',
       builder: _placeholder,
     ),
     ModuleTab(
       id: 'budgets',
       label: '预算',
-      icon: Icons.savings_rounded,
+      iconName: 'modules/wealth.svg',
       builder: _placeholder,
     ),
     ModuleTab(
       id: 'analysis',
       label: '分析',
-      icon: Icons.pie_chart_outline_rounded,
+      iconName: 'modules/chart.svg',
       builder: _placeholder,
     ),
   ];

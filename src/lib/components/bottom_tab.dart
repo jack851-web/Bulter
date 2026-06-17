@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/tokens.dart';
+import 'svg_icon.dart';
 
 /// 底部 Tab。Step 1 用占位列表。
 class BulterBottomTab extends StatelessWidget {
@@ -49,8 +50,12 @@ class BulterBottomTab extends StatelessWidget {
 class TabItem {
   final String id;
   final String label;
-  final IconData icon;
-  const TabItem({required this.id, required this.label, required this.icon});
+  final String iconName;
+  const TabItem({
+    required this.id,
+    required this.label,
+    required this.iconName,
+  });
 }
 
 class _TabButton extends StatelessWidget {
@@ -73,14 +78,19 @@ class _TabButton extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(item.icon, size: 22, color: color),
+            ColorFiltered(
+              colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+              child: SvgIcon(item.iconName, size: 22),
+            ),
             const SizedBox(height: 2),
             Text(
               item.label,
               style: TextStyle(
                 fontSize: BulterFontSize.caption,
                 color: color,
-                fontWeight: active ? BulterFontWeight.semibold : BulterFontWeight.medium,
+                fontWeight: active
+                    ? BulterFontWeight.semibold
+                    : BulterFontWeight.medium,
               ),
             ),
           ],

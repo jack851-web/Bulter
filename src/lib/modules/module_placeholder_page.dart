@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../components/empty_state.dart';
+import '../../components/svg_icon.dart';
 import '../../theme/tokens.dart';
 
 /// 通用模块占位页（Step 1 用，Step 3 起改为真实 CRUD）。
@@ -9,7 +10,7 @@ import '../../theme/tokens.dart';
 class ModulePlaceholderPage extends StatelessWidget {
   final String moduleName;
   final Color brandColor;
-  final IconData icon;
+  final Widget icon;
   final List<String> features;
 
   const ModulePlaceholderPage({
@@ -47,7 +48,15 @@ class ModulePlaceholderPage extends StatelessWidget {
                   color: brandColor,
                   borderRadius: BorderRadius.circular(BulterRadius.l),
                 ),
-                child: Icon(icon, color: BulterColors.ctaText, size: 28),
+                child: Center(
+                  child: ColorFiltered(
+                    colorFilter: const ColorFilter.mode(
+                      BulterColors.ctaText,
+                      BlendMode.srcIn,
+                    ),
+                    child: icon,
+                  ),
+                ),
               ),
               const SizedBox(width: BulterSpacing.l),
               Expanded(
@@ -124,11 +133,20 @@ class ModulePlaceholderPage extends StatelessWidget {
         ),
         const SizedBox(height: BulterSpacing.xl),
         const EmptyState(
-          icon: Icons.handyman_outlined,
+          icon: SvgIconPlaceholder(),
           title: '基础架构就绪',
           hint: '完整功能将在后续 Step 中接入',
         ),
       ],
     );
+  }
+}
+
+class SvgIconPlaceholder extends StatelessWidget {
+  const SvgIconPlaceholder({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const SvgIcon('common/circle.svg', size: 32);
   }
 }

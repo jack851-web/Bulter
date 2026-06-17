@@ -247,7 +247,7 @@ class _RecentTab extends StatelessWidget {
       brandColor: BulterColors.relationship,
       emptyTitle: '还没有联系人',
       emptyHint: '添加家人、朋友、同事，开始编织你的关系网',
-      emptyIcon: Icons.people_alt_outlined,
+      emptyIconName: 'modules/relationship.svg',
       itemBuilder: (context, c, idx) => _ContactRow(contact: c),
     );
   }

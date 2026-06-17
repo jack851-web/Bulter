@@ -53,7 +53,7 @@ class _RecordsTab extends StatelessWidget {
         brandColor: BulterColors.health,
         emptyTitle: '还没有健康记录',
         emptyHint: '追踪心情、睡眠、运动，看见身体的变化',
-        emptyIcon: Icons.favorite_border_rounded,
+        emptyIconName: 'modules/health.svg',
         itemBuilder: (context, r, idx) => _RecordRow(record: r),
       ),
       floatingActionButton: FloatingActionButton.extended(

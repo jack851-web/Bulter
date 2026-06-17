@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../components/svg_icon.dart';
 import '../../theme/tokens.dart';
 import '../../features/relationship/relationship_home_page.dart';
 import '../../features/growth/growth_home_page.dart';
@@ -47,55 +48,67 @@ class ButlerHomePage extends StatelessWidget {
             BulterSpacing.huge,
           ),
           sliver: SliverList.list(
-            children: const [
-              SizedBox(height: BulterSpacing.m),
+            children: [
+              const SizedBox(height: BulterSpacing.m),
               _ModuleCard(
                 moduleName: '关系',
                 brandColor: BulterColors.relationship,
-                icon: Icons.favorite_rounded,
+                icon: 'modules/relationship.svg',
                 subtitle: '让关系网被看见',
                 headline: '李华、妈妈、王老师是你的核心 3 人',
-                chips: [_ChipData('待联系', '2 位'), _ChipData('人情', '1 笔未还')],
+                chips: const [
+                  _ChipData('待联系', '2 位'),
+                  _ChipData('人情', '1 笔未还'),
+                ],
                 onTap: _openRelationship,
               ),
-              SizedBox(height: BulterSpacing.m),
+              const SizedBox(height: BulterSpacing.m),
               _ModuleCard(
                 moduleName: '成长',
                 brandColor: BulterColors.growth,
-                icon: Icons.trending_up_rounded,
+                icon: 'modules/growth.svg',
                 subtitle: '把模糊的愿望变成可追踪的目标',
                 headline: 'OKR 收尾期：完成《Kotlin 协程》读书',
-                chips: [_ChipData('OKR 进度', '50%'), _ChipData('进行中', '3 项')],
+                chips: const [
+                  _ChipData('OKR 进度', '50%'),
+                  _ChipData('进行中', '3 项'),
+                ],
                 onTap: _openGrowth,
               ),
-              SizedBox(height: BulterSpacing.m),
+              const SizedBox(height: BulterSpacing.m),
               _ModuleCard(
                 moduleName: '财富',
                 brandColor: BulterColors.wealth,
-                icon: Icons.account_balance_wallet_rounded,
+                icon: 'modules/wealth.svg',
                 subtitle: '知道钱去哪里',
                 headline: '本月餐饮支出已超预算 ¥120',
-                chips: [_ChipData('余额', '¥4,820'), _ChipData('预算剩余', '¥680')],
+                chips: const [
+                  _ChipData('余额', '¥4,820'),
+                  _ChipData('预算剩余', '¥680'),
+                ],
                 onTap: _openWealth,
               ),
-              SizedBox(height: BulterSpacing.m),
+              const SizedBox(height: BulterSpacing.m),
               _ModuleCard(
                 moduleName: '思想',
                 brandColor: BulterColors.thought,
-                icon: Icons.menu_book_rounded,
+                icon: 'modules/thought.svg',
                 subtitle: '把灵感沉淀为可回看的笔记',
                 headline: '《置身事内》读后感完成',
-                chips: [_ChipData('想法', '5 条'), _ChipData('信件', '2 封')],
+                chips: const [_ChipData('想法', '5 条'), _ChipData('信件', '2 封')],
                 onTap: _openThought,
               ),
-              SizedBox(height: BulterSpacing.m),
+              const SizedBox(height: BulterSpacing.m),
               _ModuleCard(
                 moduleName: '健康',
                 brandColor: BulterColors.health,
-                icon: Icons.favorite_outline_rounded,
+                icon: 'modules/health.svg',
                 subtitle: '身体是其他一切的基础',
                 headline: '日均睡眠 7.2h，体脂 22.1%',
-                chips: [_ChipData('记录', '14 次'), _ChipData('睡眠均值', '8.0h')],
+                chips: const [
+                  _ChipData('记录', '14 次'),
+                  _ChipData('睡眠均值', '8.0h'),
+                ],
                 onTap: _openHealth,
               ),
             ],
@@ -269,7 +282,7 @@ class _ChipData {
 class _ModuleCard extends StatelessWidget {
   final String moduleName;
   final Color brandColor;
-  final IconData icon;
+  final String icon;
   final String subtitle;
   final String headline;
   final List<_ChipData> chips;
@@ -315,7 +328,7 @@ class _ModuleCard extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(icon, color: BulterColors.ctaText, size: 12),
+                        SvgIcon(icon, size: 12, color: BulterColors.ctaText),
                         const SizedBox(width: 4),
                         Text(
                           moduleName,
@@ -330,10 +343,10 @@ class _ModuleCard extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    color: brandColor,
+                  SvgIcon(
+                    'common/chevron-right.svg',
                     size: 18,
+                    color: brandColor,
                   ),
                 ],
               ),

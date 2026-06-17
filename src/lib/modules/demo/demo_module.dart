@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../bulter_module.dart';
 import '../module_placeholder_page.dart';
 import '../../theme/tokens.dart';
+import '../../components/svg_icon.dart';
 import 'db/demo_daos.dart';
 import 'db/demo_tables.dart';
 
@@ -30,11 +31,11 @@ class DemoModule implements BulterModule {
   String get entryRoute => '/demo';
 
   @override
-  Widget buildHomePage(BuildContext context) => const ModulePlaceholderPage(
+  Widget buildHomePage(BuildContext context) => ModulePlaceholderPage(
     moduleName: 'Demo',
     brandColor: BulterColors.info,
-    icon: Icons.extension_rounded,
-    features: [
+    icon: const SvgIcon('common/circle.svg', size: 32),
+    features: const [
       '这是一个假业务模块',
       '仅用于验证"模块化插拔"架构',
       '注册一行即可出现在胶囊切换器',
@@ -47,13 +48,13 @@ class DemoModule implements BulterModule {
     ModuleTab(
       id: 'main',
       label: '主页',
-      icon: Icons.home_outlined,
+      iconName: 'common/circle.svg',
       builder: _placeholder,
     ),
     ModuleTab(
       id: 'settings',
       label: '设置',
-      icon: Icons.settings_outlined,
+      iconName: 'common/tune.svg',
       builder: _placeholder,
     ),
   ];

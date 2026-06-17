@@ -4,7 +4,7 @@ import '../theme/tokens.dart';
 
 /// 通用空状态组件
 class EmptyState extends StatelessWidget {
-  final IconData icon;
+  final Widget icon;
   final String title;
   final String? hint;
   final Widget? action;
@@ -32,7 +32,7 @@ class EmptyState extends StatelessWidget {
                 color: BulterColors.surfaceMuted,
                 borderRadius: BorderRadius.circular(BulterRadius.xxl),
               ),
-              child: Icon(icon, size: 32, color: BulterColors.textSecondary),
+              child: Center(child: icon),
             ),
             const SizedBox(height: BulterSpacing.l),
             Text(

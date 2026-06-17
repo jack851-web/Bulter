@@ -20,7 +20,7 @@ class ThoughtModule implements BulterModule {
   Color get brandColor => BulterColors.thought;
 
   @override
-  String get iconName => 'brain';
+  String get iconName => 'thought';
 
   @override
   String get entryRoute => '/thought';
@@ -33,25 +33,25 @@ class ThoughtModule implements BulterModule {
     ModuleTab(
       id: 'thoughts',
       label: '读后感',
-      icon: Icons.menu_book_rounded,
+      iconName: 'modules/thought.svg',
       builder: _placeholder,
     ),
     ModuleTab(
       id: 'letters',
       label: '信件',
-      icon: Icons.mail_outline_rounded,
+      iconName: 'modules/mail.svg',
       builder: _placeholder,
     ),
     ModuleTab(
       id: 'review',
       label: '回顾',
-      icon: Icons.history_rounded,
+      iconName: 'modules/trending-up.svg',
       builder: _placeholder,
     ),
     ModuleTab(
       id: 'tags',
       label: '标签',
-      icon: Icons.label_outline_rounded,
+      iconName: 'common/plus.svg',
       builder: _placeholder,
     ),
   ];

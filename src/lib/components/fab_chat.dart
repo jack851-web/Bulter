@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/tokens.dart';
+import 'svg_icon.dart';
 
 /// AI 常驻入口：黑色圆形按钮 + 闪光图标。点击进入对话。
 class AiChatFab extends StatelessWidget {
@@ -23,10 +24,12 @@ class AiChatFab extends StatelessWidget {
           child: const SizedBox(
             width: 60,
             height: 60,
-            child: Icon(
-              Icons.auto_awesome,
-              color: BulterColors.ctaText,
-              size: 26,
+            child: Center(
+              child: SvgIcon(
+                'common/sparkles.svg',
+                size: 26,
+                color: BulterColors.ctaText,
+              ),
             ),
           ),
         ),

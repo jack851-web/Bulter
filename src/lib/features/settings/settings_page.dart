@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../ai/model_registry.dart';
 import '../../components/bulter_scaffold.dart';
+import '../../components/svg_icon.dart';
 import '../../theme/tokens.dart';
+import 'model_config_page.dart';
 
 /// 设置页（Step 1 占位，Step 4 后接入模型配置 / 数据导出等）
 class SettingsPage extends StatelessWidget {
@@ -9,6 +12,10 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final active = ModelRegistry.instance.active;
+    final apiStatus = active.apiKey.isNotEmpty ? '已配置' : '未配置';
+    final modelStatus = '${active.vendorLabel} · ${active.model}';
+
     return BulterScaffold(
       title: '设置',
       child: ListView(
@@ -17,16 +24,30 @@ class SettingsPage extends StatelessWidget {
           const SizedBox(height: BulterSpacing.s),
           _Section(
             title: 'AI',
-            items: const [
+            items: [
               _Item(
-                icon: Icons.key_rounded,
-                title: 'API Key',
-                subtitle: 'Step 4 接入',
+                icon: 'settings/model.svg',
+                title: '模型',
+                subtitle: modelStatus,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const ModelConfigPage(),
+                    ),
+                  );
+                },
               ),
               _Item(
-                icon: Icons.model_training_rounded,
-                title: '模型',
-                subtitle: '默认 MiniMax M3',
+                icon: 'settings/key.svg',
+                title: 'API Key',
+                subtitle: apiStatus,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const ModelConfigPage(),
+                    ),
+                  );
+                },
               ),
             ],
           ),
@@ -35,12 +56,12 @@ class SettingsPage extends StatelessWidget {
             title: '数据',
             items: const [
               _Item(
-                icon: Icons.download_rounded,
+                icon: 'common/download.svg',
                 title: '导出数据',
                 subtitle: 'Step 20 接入',
               ),
               _Item(
-                icon: Icons.upload_rounded,
+                icon: 'common/upload.svg',
                 title: '导入数据',
                 subtitle: 'Step 20 接入',
               ),
@@ -51,9 +72,9 @@ class SettingsPage extends StatelessWidget {
             title: '关于',
             items: const [
               _Item(
-                icon: Icons.info_outline_rounded,
+                icon: 'common/info.svg',
                 title: '关于 Bulter',
-                subtitle: 'v0.1.0 · Step 1',
+                subtitle: 'v0.4.0 · Step 4',
               ),
             ],
           ),
@@ -97,7 +118,8 @@ class _Section extends StatelessWidget {
           child: Column(
             children: [
               for (var i = 0; i < items.length; i++) ...[
-                if (i > 0) const Divider(height: 0.5, indent: BulterSpacing.l + 32),
+                if (i > 0)
+                  const Divider(height: 0.5, indent: BulterSpacing.l + 32),
                 _ItemTile(item: items[i]),
               ],
             ],
@@ -109,10 +131,16 @@ class _Section extends StatelessWidget {
 }
 
 class _Item {
-  final IconData icon;
+  final String icon;
   final String title;
   final String subtitle;
-  const _Item({required this.icon, required this.title, required this.subtitle});
+  final VoidCallback? onTap;
+  const _Item({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.onTap,
+  });
 }
 
 class _ItemTile extends StatelessWidget {
@@ -124,7 +152,7 @@ class _ItemTile extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: () {},
+        onTap: item.onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: BulterSpacing.l,
@@ -132,7 +160,7 @@ class _ItemTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(item.icon, size: 20, color: BulterColors.textPrimary),
+              SvgIcon(item.icon, size: 20, color: BulterColors.textPrimary),
               const SizedBox(width: BulterSpacing.m),
               Expanded(
                 child: Column(
@@ -157,9 +185,9 @@ class _ItemTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(
-                Icons.chevron_right_rounded,
-                size: 20,
+              const SvgIcon(
+                'common/chevron-right.svg',
+                size: 18,
                 color: BulterColors.textTertiary,
               ),
             ],

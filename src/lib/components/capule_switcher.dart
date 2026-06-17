@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../modules/bulter_module.dart';
 import '../theme/tokens.dart';
+import 'svg_icon.dart';
 
 /// 顶部胶囊切换器：Butler 中枢 ↔ 六大模块（原型：phone-03-dropdown.png）。
 ///
@@ -120,10 +121,10 @@ class _CapsuleTrigger extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: BulterSpacing.s),
-                const Icon(
-                  Icons.expand_more_rounded,
+                const SvgIcon(
+                  'common/expand-more.svg',
+                  size: 16,
                   color: BulterColors.textSecondary,
-                  size: 18,
                 ),
               ],
             ),
@@ -164,6 +165,27 @@ class _ModuleMenuItem extends PopupMenuEntry<BulterModule> {
     }
   }
 
+  static String _iconFor(String id) {
+    switch (id) {
+      case ModuleId.butler:
+        return 'modules/butler.svg';
+      case ModuleId.relationship:
+        return 'modules/relationship.svg';
+      case ModuleId.growth:
+        return 'modules/growth.svg';
+      case ModuleId.wealth:
+        return 'modules/wealth.svg';
+      case ModuleId.thought:
+        return 'modules/thought.svg';
+      case ModuleId.health:
+        return 'modules/health.svg';
+      case ModuleId.memory:
+        return 'modules/memory.svg';
+      default:
+        return 'common/circle.svg';
+    }
+  }
+
   @override
   bool represents(BulterModule? value) => value?.id == module.id;
 
@@ -199,7 +221,13 @@ class _ModuleMenuItemState extends State<_ModuleMenuItem> {
                   color: m.brandColor.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(BulterRadius.s),
                 ),
-                child: Icon(_iconFor(m.id), size: 16, color: m.brandColor),
+                child: Center(
+                  child: SvgIcon(
+                    _ModuleMenuItem._iconFor(m.id),
+                    size: 16,
+                    color: m.brandColor,
+                  ),
+                ),
               ),
               const SizedBox(width: BulterSpacing.m),
               Expanded(
@@ -228,32 +256,11 @@ class _ModuleMenuItemState extends State<_ModuleMenuItem> {
                 ),
               ),
               if (widget.active)
-                Icon(Icons.check_rounded, size: 18, color: m.brandColor),
+                SvgIcon('common/check.svg', size: 18, color: m.brandColor),
             ],
           ),
         ),
       ),
     );
-  }
-
-  static IconData _iconFor(String id) {
-    switch (id) {
-      case ModuleId.butler:
-        return Icons.auto_awesome_rounded;
-      case ModuleId.relationship:
-        return Icons.favorite_rounded;
-      case ModuleId.growth:
-        return Icons.trending_up_rounded;
-      case ModuleId.wealth:
-        return Icons.account_balance_wallet_rounded;
-      case ModuleId.thought:
-        return Icons.menu_book_rounded;
-      case ModuleId.health:
-        return Icons.favorite_outline_rounded;
-      case ModuleId.memory:
-        return Icons.psychology_rounded;
-      default:
-        return Icons.circle_outlined;
-    }
   }
 }

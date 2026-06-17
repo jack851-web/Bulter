@@ -1,7 +1,7 @@
 name: bulter
 description: "Bulter - AI 人生管家。本地优先、越用越懂用户的个人 Agent 工具。"
 publish_to: 'none'
-version: 0.3.1+5
+version: 0.4.0+6
 
 environment:
   sdk: ^3.12.1
@@ -61,3 +61,8 @@ flutter:
   uses-material-design: true
   assets:
     - assets/
+    - assets/svg/
+    - assets/svg/common/
+    - assets/svg/modules/
+    - assets/svg/chat/
+    - assets/svg/settings/

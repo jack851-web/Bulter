@@ -20,7 +20,7 @@ class RelationshipModule implements BulterModule {
   Color get brandColor => BulterColors.relationship;
 
   @override
-  String get iconName => 'heart';
+  String get iconName => 'relationship';
 
   @override
   String get entryRoute => '/relationship';
@@ -33,25 +33,25 @@ class RelationshipModule implements BulterModule {
     ModuleTab(
       id: 'list',
       label: '联系人',
-      icon: Icons.people_alt_outlined,
+      iconName: 'modules/relationship.svg',
       builder: _placeholder,
     ),
     ModuleTab(
       id: 'timeline',
       label: '互动',
-      icon: Icons.timeline_rounded,
+      iconName: 'modules/timeline.svg',
       builder: _placeholder,
     ),
     ModuleTab(
       id: 'favors',
       label: '人情',
-      icon: Icons.redeem_rounded,
+      iconName: 'modules/briefcase-filled.svg',
       builder: _placeholder,
     ),
     ModuleTab(
       id: 'appts',
       label: '约定',
-      icon: Icons.event_note_rounded,
+      iconName: 'modules/mail.svg',
       builder: _placeholder,
     ),
   ];

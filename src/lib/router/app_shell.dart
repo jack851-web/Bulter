@@ -4,6 +4,7 @@ import '../components/bottom_tab.dart';
 import '../components/bulter_scaffold.dart';
 import '../components/capule_switcher.dart';
 import '../components/fab_chat.dart';
+import '../components/svg_icon.dart';
 import '../modules/bulter_module.dart';
 import '../modules/registry.dart';
 import '../theme/tokens.dart';
@@ -66,7 +67,7 @@ class _AppShellState extends State<AppShell> {
         actions: [
           IconButton(
             onPressed: _closeChat,
-            icon: const Icon(Icons.close_rounded),
+            icon: const SvgIcon('common/close.svg', size: 20),
           ),
         ],
         child: const ChatPage(),
@@ -136,22 +137,11 @@ class _AppShellState extends State<AppShell> {
                   ),
                   Padding(
                     padding: const EdgeInsets.only(right: BulterSpacing.l),
-                    child: Material(
-                      color: BulterColors.surface,
-                      shape: const CircleBorder(),
-                      child: InkWell(
-                        customBorder: const CircleBorder(),
-                        onTap: _openSettings,
-                        child: const SizedBox(
-                          width: 36,
-                          height: 36,
-                          child: Icon(
-                            Icons.tune_rounded,
-                            size: 18,
-                            color: BulterColors.textPrimary,
-                          ),
-                        ),
-                      ),
+                    child: SvgIconButton(
+                      iconName: 'common/tune.svg',
+                      onTap: _openSettings,
+                      size: 36,
+                      iconSize: 18,
                     ),
                   ),
                 ],
@@ -182,7 +172,7 @@ class _AppShellState extends State<AppShell> {
         BulterBottomTab(
           tabs: [
             for (final t in tabs)
-              TabItem(id: t.id, label: t.label, icon: t.icon),
+              TabItem(id: t.id, label: t.label, iconName: t.iconName),
           ],
           activeIndex: activeIndex,
           onChanged: onTab,

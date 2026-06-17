@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../components/empty_state.dart';
+import '../../components/svg_icon.dart';
 import '../../theme/tokens.dart';
 
 /// 通用列表页骨架：标题栏 + 列表 + 空态 + 错误态。
@@ -15,7 +16,7 @@ class StreamListView<T> extends StatelessWidget {
   final Widget Function(BuildContext context, T item, int index) itemBuilder;
   final String emptyTitle;
   final String? emptyHint;
-  final IconData emptyIcon;
+  final String emptyIconName;
   final Color? brandColor;
   final Widget? header;
   final EdgeInsetsGeometry padding;
@@ -27,7 +28,7 @@ class StreamListView<T> extends StatelessWidget {
     required this.itemBuilder,
     required this.emptyTitle,
     this.emptyHint,
-    this.emptyIcon = Icons.inbox_outlined,
+    this.emptyIconName = 'common/inbox.svg',
     this.brandColor,
     this.header,
     this.padding = const EdgeInsets.fromLTRB(
@@ -55,7 +56,11 @@ class StreamListView<T> extends StatelessWidget {
         }
         if (snap.hasError) {
           return EmptyState(
-            icon: Icons.error_outline,
+            icon: const SvgIcon(
+              'common/error.svg',
+              size: 32,
+              color: BulterColors.error,
+            ),
             title: '加载失败',
             hint: snap.error.toString(),
           );
@@ -64,7 +69,11 @@ class StreamListView<T> extends StatelessWidget {
         if (items.isEmpty) {
           return Center(
             child: EmptyState(
-              icon: emptyIcon,
+              icon: SvgIcon(
+                emptyIconName,
+                size: 32,
+                color: brandColor ?? BulterColors.textSecondary,
+              ),
               title: emptyTitle,
               hint: emptyHint,
               action: brandColor == null
@@ -94,7 +103,7 @@ class StreamListView<T> extends StatelessWidget {
           physics: physics,
           padding: padding,
           itemCount: items.length + (header == null ? 0 : 1),
-          separatorBuilder: (_, __) => const SizedBox(height: BulterSpacing.m),
+          separatorBuilder: (_, _) => const SizedBox(height: BulterSpacing.m),
           itemBuilder: (context, i) {
             if (header != null && i == 0) return header!;
             final idx = header == null ? i : i - 1;

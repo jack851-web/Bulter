@@ -317,7 +317,7 @@ class _InteractionsTab extends StatelessWidget {
       stream: AppDatabase.I.relationshipDao.watchInteractionsFor(contactId),
       emptyTitle: '还没有互动记录',
       emptyHint: '点击右下角"记一笔"，留下第一次对话的痕迹',
-      emptyIcon: Icons.chat_bubble_outline_rounded,
+      emptyIconName: 'chat/chat-bubble-outline.svg',
       itemBuilder: (context, i, idx) {
         return _InteractionRow(interaction: i);
       },
@@ -414,7 +414,7 @@ class _FavorsTab extends StatelessWidget {
           stream: Stream.value(mine),
           emptyTitle: '没有人情往来',
           emptyHint: '记一笔礼金、礼物、帮忙，回头好记得还',
-          emptyIcon: Icons.redeem_outlined,
+          emptyIconName: 'modules/briefcase-filled.svg',
           itemBuilder: (context, f, idx) => _FavorRow(favor: f),
         );
       },

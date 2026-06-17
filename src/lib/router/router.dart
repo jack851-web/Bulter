@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/settings/model_config_page.dart';
 import '../modules/bulter_module.dart';
 import '../modules/registry.dart';
 import 'app_shell.dart';
@@ -15,6 +16,12 @@ GoRouter buildRouter(ModuleRegistry registry) {
   return GoRouter(
     initialLocation: '/butler',
     routes: [
+      // 设置类子页（覆盖在 Shell 之上；Step 4 接入）
+      GoRoute(
+        path: '/settings/model',
+        name: 'settings.model',
+        builder: (context, state) => const ModelConfigPage(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return _ShellHost(navigationShell: navigationShell, modules: modules);
