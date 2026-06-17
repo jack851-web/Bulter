@@ -223,4 +223,8 @@ class _MissingModule implements BulterModule {
   Future<void> onRegister() async {}
   @override
   Future<void> onDispose() async {}
+  @override
+  List<Type> get tableClasses => const [];
+  @override
+  List<Type> get daoClasses => const [];
 }

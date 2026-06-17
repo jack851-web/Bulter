@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../bulter_module.dart';
 import '../module_placeholder_page.dart';
 import '../../theme/tokens.dart';
+import 'db/health_daos.dart';
+import 'db/health_tables.dart';
 
 /// 健康模块
 class HealthModule implements BulterModule {
@@ -78,6 +80,16 @@ class HealthModule implements BulterModule {
 
   @override
   BriefingGenerator? get briefingGenerator => null;
+
+  @override
+  List<Type> get tableClasses => const [
+    HealthRecords,
+    CheckupReports,
+    HealthScores,
+  ];
+
+  @override
+  List<Type> get daoClasses => const [HealthDao];
 
   @override
   Future<void> onRegister() async {}

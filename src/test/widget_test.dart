@@ -5,14 +5,28 @@
 // 2) ModuleRegistry 包含 6 个内置模块 + Demo
 // 3) Demo 模块也注册成功（模块化插拔）
 
+import 'dart:io';
+
 import 'package:bulter/app_bootstrap.dart';
 import 'package:bulter/modules/bulter_module.dart';
 import 'package:bulter/modules/registry.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  late Directory tempDir;
+
+  setUp(() async {
+    tempDir = await Directory.systemTemp.createTemp('bulter_widget_');
+  });
+
+  tearDown(() async {
+    if (tempDir.existsSync()) {
+      await tempDir.delete(recursive: true);
+    }
+  });
+
   testWidgets('Step 1: bootstrap registers all modules', (tester) async {
-    await bootstrapApp();
+    await bootstrapApp(subdir: tempDir.path);
     final registry = ModuleRegistry.instance;
     expect(registry.isInitialized, true);
     expect(registry.get(ModuleId.butler), isNotNull);

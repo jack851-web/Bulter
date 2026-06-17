@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../bulter_module.dart';
 import '../module_placeholder_page.dart';
 import '../../theme/tokens.dart';
+import 'db/demo_daos.dart';
+import 'db/demo_tables.dart';
 
 /// 假模块 Demo：用于验证模块化架构（plan.md 第 1 步完成标准第 8 条）。
 ///
@@ -64,6 +66,12 @@ class DemoModule implements BulterModule {
 
   @override
   BriefingGenerator? get briefingGenerator => null;
+
+  @override
+  List<Type> get tableClasses => const [DemoItems];
+
+  @override
+  List<Type> get daoClasses => const [DemoDao];
 
   @override
   Future<void> onRegister() async {}

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../bulter_module.dart';
 import '../../theme/tokens.dart';
 import 'butler_home_page.dart';
+import 'db/ai_daos.dart';
+import 'db/ai_tables.dart';
 
 /// Butler 中枢模块
 class ButlerModule implements BulterModule {
@@ -37,6 +39,18 @@ class ButlerModule implements BulterModule {
 
   @override
   BriefingGenerator? get briefingGenerator => null;
+
+  @override
+  List<Type> get tableClasses => const [
+    Sessions,
+    Messages,
+    Briefings,
+    Memories,
+    UserProfiles,
+  ];
+
+  @override
+  List<Type> get daoClasses => const [AiDao];
 
   @override
   Future<void> onRegister() async {}

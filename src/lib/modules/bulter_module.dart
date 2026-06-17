@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:drift/drift.dart';
+import 'package:flutter/material.dart' hide Table;
 
 import '../theme/tokens.dart';
 
@@ -73,12 +74,23 @@ abstract class BulterModule {
   /// 该模块提供的简报生成器
   BriefingGenerator? get briefingGenerator;
 
+  /// 该模块归属的 Drift [Table] 类列表（用于 AppDatabase 静态注册 +
+  /// 测试时验证模块自包含）。Step 2 接入 Drift 后填充。
+  List<Type> get tableClasses => const [];
+
+  /// 该模块提供的 DAO 类（同样是 Type 列表，DAO 实例由 [ModuleRegistry] /
+  /// [AppDatabase] 在打开数据库后构造并按需暴露）。
+  List<Type> get daoClasses => const [];
+
   /// 注册时回调（用于挂载 EventBus 监听、打开 Hive Box 等）
   Future<void> onRegister();
 
   /// 卸载时回调
   Future<void> onDispose();
 }
+
+/// DAO 工厂：模块可按需提供 DAO 实例的构造方法（在数据库打开后调用）。
+typedef DaoFactory<T> = T Function(QueryExecutor db);
 
 /// 模块内 Tab 描述
 class ModuleTab {

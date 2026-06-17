@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../bulter_module.dart';
 import '../module_placeholder_page.dart';
 import '../../theme/tokens.dart';
+import 'db/growth_daos.dart';
+import 'db/growth_tables.dart';
 
 /// 成长模块
 class GrowthModule implements BulterModule {
@@ -78,6 +80,12 @@ class GrowthModule implements BulterModule {
 
   @override
   BriefingGenerator? get briefingGenerator => null;
+
+  @override
+  List<Type> get tableClasses => const [Goals, Okrs, LearningRecords, Projects];
+
+  @override
+  List<Type> get daoClasses => const [GrowthDao];
 
   @override
   Future<void> onRegister() async {}

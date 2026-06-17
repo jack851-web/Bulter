@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../bulter_module.dart';
 import '../module_placeholder_page.dart';
 import '../../theme/tokens.dart';
+import 'db/thought_daos.dart';
+import 'db/thought_tables.dart';
 
 /// 思想模块
 class ThoughtModule implements BulterModule {
@@ -78,6 +80,12 @@ class ThoughtModule implements BulterModule {
 
   @override
   BriefingGenerator? get briefingGenerator => null;
+
+  @override
+  List<Type> get tableClasses => const [Thoughts, Letters, AnnualReviews];
+
+  @override
+  List<Type> get daoClasses => const [ThoughtDao];
 
   @override
   Future<void> onRegister() async {}

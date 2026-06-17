@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../bulter_module.dart';
 import '../module_placeholder_page.dart';
 import '../../theme/tokens.dart';
+import 'db/wealth_daos.dart';
+import 'db/wealth_tables.dart';
 
 /// 财富模块
 class WealthModule implements BulterModule {
@@ -79,6 +81,12 @@ class WealthModule implements BulterModule {
 
   @override
   BriefingGenerator? get briefingGenerator => null;
+
+  @override
+  List<Type> get tableClasses => const [Accounts, Transactions, Budgets];
+
+  @override
+  List<Type> get daoClasses => const [WealthDao];
 
   @override
   Future<void> onRegister() async {}
