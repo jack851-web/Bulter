@@ -12,7 +12,6 @@ import 'dart:io';
 import 'package:bulter/db/app_database.dart';
 import 'package:bulter/db/backup.dart';
 import 'package:bulter/db/connection.dart';
-import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
@@ -70,7 +69,6 @@ void main() {
 
   test('升级前备份：v1→v2 时复制 sqlite 文件', () async {
     // 1) 先创建 v1 数据库（直接落盘）
-    final file = File(sqlitePath);
     final db = AppDatabase.forTesting(
       openAppConnection(overrideFilePath: sqlitePath),
     );

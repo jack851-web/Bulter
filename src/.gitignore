@@ -43,3 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Gradle / CMake / NDK 临时产物（本地 FFI 插件也会产生）
+**/.cxx/
+**/.gradle/
+**/android/CMakeLists.txt.user
+**/build/

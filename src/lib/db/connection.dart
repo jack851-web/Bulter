@@ -1,11 +1,11 @@
 import 'dart:io';
 
+import 'package:bulter_sqlite_vec/bulter_sqlite_vec.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
-import 'package:sqlite_vec/sqlite_vec.dart';
 
 bool _vecExtensionRegistered = false;
 bool _vecExtensionFailed = false;
@@ -13,8 +13,8 @@ bool _vecExtensionFailed = false;
 /// 全局注册 sqlite-vec 扩展。多次调用幂等。
 ///
 /// sqlite3_flutter_libs 自带的 sqlite3 不开放 `load_extension` SQL 函数，
-/// 必须通过 `sqlite3_auto_extension` 机制注册。`sqlite_vec` 包的入口符号是
-/// `sqlite3_vec_init`。
+/// 必须通过 `sqlite3_auto_extension` 机制注册。Bulter 自建 `bulter_sqlite_vec`
+/// 插件的入口符号是 `sqlite3_vec_init`（编译自 sqlite-vec v0.1.7-alpha.3）。
 ///
 /// 在测试 / 不支持的环境下会失败但不会抛错，向量相关 API 后续会被跳过。
 void _ensureVecExtensionRegistered() {
@@ -74,9 +74,7 @@ Future<int> readSqliteUserVersion({
   final path =
       overrideFilePath ??
       p.join(
-        subdir != null
-            ? subdir
-            : (await getApplicationDocumentsDirectory()).path,
+        subdir ?? (await getApplicationDocumentsDirectory()).path,
         'bulter.sqlite',
       );
   final file = File(path);

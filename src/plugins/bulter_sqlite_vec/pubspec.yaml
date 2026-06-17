@@ -1,0 +1,32 @@
+name: bulter_sqlite_vec
+description: "Bulter 本地 FFI 插件 — 嵌入 sqlite-vec v0.1.7-alpha.3，提供 RAG 语义记忆所需的向量索引与检索。直接 vendoring 源码与 SQLite 头文件，避免依赖外部 pub 包的封装缺陷。"
+version: 0.1.0
+repository: https://github.com/asg017/sqlite-vec/tree/v0.1.7-alpha.3
+
+environment:
+  sdk: '>=3.4.3 <4.0.0'
+  flutter: '>=3.3.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  plugin_platform_interface: ^2.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        ffiPlugin: true
+      ios:
+        ffiPlugin: true
+      linux:
+        ffiPlugin: true
+      macos:
+        ffiPlugin: true
+      windows:
+        ffiPlugin: true

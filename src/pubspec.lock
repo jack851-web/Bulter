@@ -113,6 +113,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "8.12.6"
+  bulter_sqlite_vec:
+    dependency: "direct main"
+    description:
+      path: "plugins/bulter_sqlite_vec"
+      relative: true
+    source: path
+    version: "0.1.0"
   characters:
     dependency: transitive
     description:
@@ -789,14 +796,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.5.42"
-  sqlite_vec:
-    dependency: "direct main"
-    description:
-      name: sqlite_vec
-      sha256: b43bf5df91b519fd2e92777900268accbc35d8f1c2d269bb0b31ab794b4ace01
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "0.1.7-alpha.3"
   sqlparser:
     dependency: transitive
     description:

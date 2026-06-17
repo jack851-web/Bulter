@@ -30,7 +30,10 @@ dependencies:
   path: ^1.9.0
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-  sqlite_vec: ^0.1.0
+
+  # sqlite-vec (本地 FFI 插件，vendoring 源码避免外部 alpha 包的打包缺陷)
+  bulter_sqlite_vec:
+    path: plugins/bulter_sqlite_vec
 
   # 网络
   dio: ^5.7.0
