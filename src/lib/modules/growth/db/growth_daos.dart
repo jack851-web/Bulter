@@ -21,6 +21,7 @@ class GrowthDao extends DatabaseAccessor<AppDatabase> with _$GrowthDaoMixin {
   }
 
   Future<int> insertGoal(GoalsCompanion g) => into(goals).insert(g);
+  Future<bool> updateGoal(GoalsCompanion g) => update(goals).replace(g);
   Future<int> deleteGoal(int id) =>
       (delete(goals)..where((g) => g.id.equals(id))).go();
 
@@ -38,6 +39,10 @@ class GrowthDao extends DatabaseAccessor<AppDatabase> with _$GrowthDaoMixin {
 
   Future<int> insertLearning(LearningRecordsCompanion l) =>
       into(learningRecords).insert(l);
+  Future<bool> updateLearning(LearningRecordsCompanion l) =>
+      update(learningRecords).replace(l);
+  Future<int> deleteLearning(int id) =>
+      (delete(learningRecords)..where((l) => l.id.equals(id))).go();
 
   // —— Projects ——
   Stream<List<Project>> watchProjects() {

@@ -14,6 +14,8 @@ class WealthDao extends DatabaseAccessor<AppDatabase> with _$WealthDaoMixin {
   )..orderBy([(a) => OrderingTerm(expression: a.createdAt)])).watch();
 
   Future<int> insertAccount(AccountsCompanion a) => into(accounts).insert(a);
+  Future<bool> updateAccount(AccountsCompanion a) =>
+      update(accounts).replace(a);
   Future<int> deleteAccount(int id) =>
       (delete(accounts)..where((a) => a.id.equals(id))).go();
 

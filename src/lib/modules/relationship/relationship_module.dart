@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../bulter_module.dart';
-import '../module_placeholder_page.dart';
+import '../../features/relationship/relationship_home_page.dart';
 import '../../theme/tokens.dart';
 import 'db/relationship_daos.dart';
 import 'db/relationship_tables.dart';
@@ -26,21 +26,7 @@ class RelationshipModule implements BulterModule {
   String get entryRoute => '/relationship';
 
   @override
-  Widget buildHomePage(BuildContext context) => const ModulePlaceholderPage(
-    moduleName: '关系',
-    brandColor: BulterColors.relationship,
-    icon: Icons.favorite_rounded,
-    features: [
-      '联系人 CRUD · 标签 · 备注 · 最近互动',
-      '互动记录（通话 / 见面 / 消息）',
-      '关系分组（家人 / 朋友 / 同事 / 客户）',
-      '聊天记录导入（截图识别 → 结构化）',
-      '智能回复建议（基于历史风格）',
-      '约定管理（到期提醒）',
-      '人情往来记录（送礼 / 收礼）',
-      '关系图谱（Web 端可视化）',
-    ],
-  );
+  Widget buildHomePage(BuildContext context) => const RelationshipHomePage();
 
   @override
   List<ModuleTab> get tabs => const [

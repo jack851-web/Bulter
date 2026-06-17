@@ -36,6 +36,9 @@ class RelationshipDao extends DatabaseAccessor<AppDatabase>
   Future<Contact?> getContact(int id) =>
       (select(contacts)..where((c) => c.id.equals(id))).getSingleOrNull();
 
+  Stream<Contact?> watchContact(int id) =>
+      (select(contacts)..where((c) => c.id.equals(id))).watchSingleOrNull();
+
   // —— Interactions ——
   Stream<List<Interaction>> watchInteractionsFor(int contactId) {
     return (select(interactions)

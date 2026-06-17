@@ -20,6 +20,8 @@ class ThoughtDao extends DatabaseAccessor<AppDatabase> with _$ThoughtDaoMixin {
   }
 
   Future<int> insertThought(ThoughtsCompanion t) => into(thoughts).insert(t);
+  Future<bool> updateThought(ThoughtsCompanion t) =>
+      update(thoughts).replace(t);
   Future<int> deleteThought(int id) =>
       (delete(thoughts)..where((t) => t.id.equals(id))).go();
 
@@ -34,6 +36,7 @@ class ThoughtDao extends DatabaseAccessor<AppDatabase> with _$ThoughtDaoMixin {
   }
 
   Future<int> insertLetter(LettersCompanion l) => into(letters).insert(l);
+  Future<bool> updateLetter(LettersCompanion l) => update(letters).replace(l);
   Future<int> markLetterOpened(int id) =>
       (update(letters)..where((l) => l.id.equals(id)))
           .write(LettersCompanion(openedAt: Value(DateTime.now())))

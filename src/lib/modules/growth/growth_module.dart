@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../bulter_module.dart';
-import '../module_placeholder_page.dart';
+import '../../features/growth/growth_home_page.dart';
 import '../../theme/tokens.dart';
 import 'db/growth_daos.dart';
 import 'db/growth_tables.dart';
@@ -26,20 +26,7 @@ class GrowthModule implements BulterModule {
   String get entryRoute => '/growth';
 
   @override
-  Widget buildHomePage(BuildContext context) => const ModulePlaceholderPage(
-    moduleName: '成长',
-    brandColor: BulterColors.growth,
-    icon: Icons.flag_rounded,
-    features: [
-      '目标 CRUD（年度 / 季度）',
-      '目标进度追踪（百分比 + 关键结果）',
-      '学习记录（课程 / 书籍 / 技能）',
-      '项目看板（待办 / 进行中 / 已完成）',
-      'OKR 管理（目标 + KR + 进度）',
-      '简历管理（版本化）',
-      '人脉分析（结合关系模块）',
-    ],
-  );
+  Widget buildHomePage(BuildContext context) => const GrowthHomePage();
 
   @override
   List<ModuleTab> get tabs => const [

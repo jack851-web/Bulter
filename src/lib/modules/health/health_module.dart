@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../bulter_module.dart';
-import '../module_placeholder_page.dart';
+import '../../features/health/health_home_page.dart';
 import '../../theme/tokens.dart';
 import 'db/health_daos.dart';
 import 'db/health_tables.dart';
@@ -26,20 +26,7 @@ class HealthModule implements BulterModule {
   String get entryRoute => '/health';
 
   @override
-  Widget buildHomePage(BuildContext context) => const ModulePlaceholderPage(
-    moduleName: '健康',
-    brandColor: BulterColors.health,
-    icon: Icons.favorite_outline_rounded,
-    features: [
-      '健康记录 CRUD（体重 / 睡眠 / 运动 / 心率）',
-      '健康时间线',
-      '基础趋势图（体重 / 睡眠折线）',
-      '体检报告解析（截图识别 → 结构化指标）',
-      '健康指标卡（异常项高亮）',
-      '综合健康分（多维度加权评分）',
-      '设备同步（Apple Health / 小米）',
-    ],
-  );
+  Widget buildHomePage(BuildContext context) => const HealthHomePage();
 
   @override
   List<ModuleTab> get tabs => const [

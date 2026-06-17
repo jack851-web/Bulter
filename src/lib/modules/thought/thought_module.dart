@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../bulter_module.dart';
-import '../module_placeholder_page.dart';
+import '../../features/thought/thought_home_page.dart';
 import '../../theme/tokens.dart';
 import 'db/thought_daos.dart';
 import 'db/thought_tables.dart';
@@ -26,20 +26,7 @@ class ThoughtModule implements BulterModule {
   String get entryRoute => '/thought';
 
   @override
-  Widget buildHomePage(BuildContext context) => const ModulePlaceholderPage(
-    moduleName: '思想',
-    brandColor: BulterColors.thought,
-    icon: Icons.psychology_rounded,
-    features: [
-      '读后感 CRUD（书名 · 作者 · 感悟 · 评分）',
-      '思想卡片（灵感速记，标签分类）',
-      '思想时间线',
-      '标签筛选',
-      '给未来的信（定时解锁）',
-      '年度回顾（年末自动汇总）',
-      '双向链接笔记（[[ ]]）',
-    ],
-  );
+  Widget buildHomePage(BuildContext context) => const ThoughtHomePage();
 
   @override
   List<ModuleTab> get tabs => const [

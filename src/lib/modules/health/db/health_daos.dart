@@ -21,7 +21,8 @@ class HealthDao extends DatabaseAccessor<AppDatabase> with _$HealthDaoMixin {
 
   Future<int> insertRecord(HealthRecordsCompanion r) =>
       into(healthRecords).insert(r);
-
+  Future<bool> updateRecord(HealthRecordsCompanion r) =>
+      update(healthRecords).replace(r);
   Future<int> deleteRecord(int id) =>
       (delete(healthRecords)..where((h) => h.id.equals(id))).go();
 
