@@ -6,70 +6,34 @@ import '../form/stream_list_view.dart';
 import 'goal_form.dart';
 import 'learning_form.dart';
 
-/// 成长模块主页：Tab 切换「目标 / 学习 / OKR / 项目」。
+/// 成长模块主页（原型：phone-05-growth.png）。
+///
+/// 布局：
+///   1) 顶部 OKR 周报大卡（深绿底 + 大标题 + 进度条）
+///   2) 紧凑目标 / 学习列表（彩色 icon + 标题 + 副标题 + 进度）
 class GrowthHomePage extends StatelessWidget {
   const GrowthHomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Column(
-        children: [
-          Container(
-            color: BulterColors.canvas,
-            child: TabBar(
-              labelColor: BulterColors.cta,
-              unselectedLabelColor: BulterColors.textSecondary,
-              indicatorColor: BulterColors.growth,
-              indicatorSize: TabBarIndicatorSize.label,
-              labelStyle: const TextStyle(
-                fontSize: BulterFontSize.bodyLg,
-                fontWeight: BulterFontWeight.semibold,
-              ),
-              tabs: const [
-                Tab(text: '目标'),
-                Tab(text: '学习'),
-              ],
-            ),
-          ),
-          const Expanded(
-            child: TabBarView(
-              children: [
-                _GoalsTab(),
-                _LearningTab(),
-              ],
-            ),
-          ),
-        ],
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        BulterSpacing.l,
+        BulterSpacing.l,
+        BulterSpacing.l,
+        BulterSpacing.huge,
       ),
-    );
-  }
-}
-
-class _GoalsTab extends StatelessWidget {
-  const _GoalsTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: BulterColors.canvas,
-      body: StreamListView<Goal>(
-        stream: AppDatabase.I.growthDao.watchActiveGoals(),
-        brandColor: BulterColors.growth,
-        emptyTitle: '还没有目标',
-        emptyHint: '把模糊的愿望变成可追踪的目标',
-        emptyIcon: Icons.flag_outlined,
-        itemBuilder: (context, g, idx) => _GoalRow(goal: g),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openAddGoal(context),
-        backgroundColor: BulterColors.cta,
-        foregroundColor: BulterColors.ctaText,
-        elevation: 0,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('新目标'),
-      ),
+      children: const [
+        _WeeklyHeader(),
+        SizedBox(height: BulterSpacing.l),
+        _SectionTitle('本月 · OKR 收尾期'),
+        SizedBox(height: BulterSpacing.s),
+        _OkrCard(),
+        SizedBox(height: BulterSpacing.l),
+        _SectionTitle('目标 / 学习记录'),
+        SizedBox(height: BulterSpacing.s),
+        _GoalLearningList(),
+      ],
     );
   }
 
@@ -83,171 +47,6 @@ class _GoalsTab extends StatelessWidget {
             if (context.mounted) Navigator.of(context).pop();
           },
         ),
-      ),
-    );
-  }
-}
-
-class _GoalRow extends StatelessWidget {
-  final Goal goal;
-  const _GoalRow({required this.goal});
-
-  static const _catLabels = {
-    'career': '事业',
-    'skill': '技能',
-    'health': '健康',
-    'relationship': '关系',
-    'finance': '财务',
-    'other': '其他',
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final cat = _catLabels[goal.category] ?? goal.category;
-    return ListCard(
-      brandColor: BulterColors.growth,
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => GoalForm(
-            title: '编辑目标',
-            initial: goal,
-            onSubmit: (data) async {
-              await AppDatabase.I.growthDao.updateGoal(data);
-              if (context.mounted) Navigator.of(context).pop();
-            },
-          ),
-        ),
-      ),
-      trailing: IconButton(
-        icon: const Icon(
-          Icons.delete_outline_rounded,
-          color: BulterColors.error,
-        ),
-        onPressed: () async {
-          final ok = await showDialog<bool>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('删除目标'),
-              content: Text('确认删除"${goal.title}"？'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(false),
-                  child: const Text('取消'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(true),
-                  child: const Text(
-                    '删除',
-                    style: TextStyle(color: BulterColors.error),
-                  ),
-                ),
-              ],
-            ),
-          );
-          if (ok == true) {
-            await AppDatabase.I.growthDao.deleteGoal(goal.id);
-          }
-        },
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  goal.title,
-                  style: const TextStyle(
-                    fontSize: BulterFontSize.bodyLg,
-                    fontWeight: BulterFontWeight.semibold,
-                    color: BulterColors.textPrimary,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: BulterSpacing.s,
-                  vertical: 2,
-                ),
-                decoration: BoxDecoration(
-                  color: BulterColors.growth.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(BulterRadius.pill),
-                ),
-                child: Text(
-                  cat,
-                  style: const TextStyle(
-                    fontSize: BulterFontSize.caption,
-                    color: BulterColors.growth,
-                    fontWeight: BulterFontWeight.semibold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: BulterSpacing.s),
-          Row(
-            children: [
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(BulterRadius.pill),
-                  child: LinearProgressIndicator(
-                    value: goal.progress / 100.0,
-                    minHeight: 6,
-                    backgroundColor: BulterColors.surfaceMuted,
-                    valueColor:
-                        const AlwaysStoppedAnimation(BulterColors.growth),
-                  ),
-                ),
-              ),
-              const SizedBox(width: BulterSpacing.m),
-              Text(
-                '${goal.progress}%',
-                style: const TextStyle(
-                  fontSize: BulterFontSize.footnote,
-                  fontWeight: BulterFontWeight.semibold,
-                  color: BulterColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-          if (goal.targetDate != null) ...[
-            const SizedBox(height: BulterSpacing.xs),
-            Text(
-              '目标日期：${goal.targetDate!.year}-${goal.targetDate!.month.toString().padLeft(2, '0')}-${goal.targetDate!.day.toString().padLeft(2, '0')}',
-              style: const TextStyle(
-                fontSize: BulterFontSize.caption,
-                color: BulterColors.textTertiary,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _LearningTab extends StatelessWidget {
-  const _LearningTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: BulterColors.canvas,
-      body: StreamListView<LearningRecord>(
-        stream: AppDatabase.I.growthDao.watchLearning(),
-        brandColor: BulterColors.growth,
-        emptyTitle: '还没有学习记录',
-        emptyHint: '每读一本书、看一门课，都值得记一笔',
-        emptyIcon: Icons.menu_book_outlined,
-        itemBuilder: (context, l, idx) => _LearningRow(record: l),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openAddLearning(context),
-        backgroundColor: BulterColors.cta,
-        foregroundColor: BulterColors.ctaText,
-        elevation: 0,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('记一条'),
       ),
     );
   }
@@ -267,9 +66,179 @@ class _LearningTab extends StatelessWidget {
   }
 }
 
-class _LearningRow extends StatelessWidget {
-  final LearningRecord record;
-  const _LearningRow({required this.record});
+class _WeeklyHeader extends StatelessWidget {
+  const _WeeklyHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: BulterSpacing.m,
+            vertical: 4,
+          ),
+          decoration: BoxDecoration(
+            color: BulterColors.growth,
+            borderRadius: BorderRadius.circular(BulterRadius.pill),
+          ),
+          child: const Text(
+            '本月',
+            style: TextStyle(
+              color: BulterColors.ctaText,
+              fontSize: BulterFontSize.caption,
+              fontWeight: BulterFontWeight.bold,
+            ),
+          ),
+        ),
+        const SizedBox(width: BulterSpacing.s),
+        Text(
+          '第 ${DateTime.now().weekday} 周',
+          style: const TextStyle(
+            fontSize: BulterFontSize.body,
+            color: BulterColors.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String text;
+  const _SectionTitle(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: BulterFontSize.bodyLg,
+        fontWeight: BulterFontWeight.semibold,
+        color: BulterColors.textPrimary,
+      ),
+    );
+  }
+}
+
+class _OkrCard extends StatelessWidget {
+  const _OkrCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(BulterSpacing.xl),
+      decoration: BoxDecoration(
+        color: BulterColors.growth,
+        borderRadius: BorderRadius.circular(BulterRadius.xxl),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '本月 · 21 周报',
+            style: TextStyle(
+              color: BulterColors.ctaText,
+              fontSize: BulterFontSize.caption,
+              fontWeight: BulterFontWeight.semibold,
+            ),
+          ),
+          const SizedBox(height: BulterSpacing.s),
+          const Text(
+            'Kotlin 协程',
+            style: TextStyle(
+              color: BulterColors.ctaText,
+              fontSize: BulterFontSize.displayS,
+              fontWeight: BulterFontWeight.bold,
+              height: 1.1,
+            ),
+          ),
+          const SizedBox(height: BulterSpacing.s),
+          const Text(
+            '6 章 · 40% 周报 · 10 月末完成',
+            style: TextStyle(
+              color: Color(0xCCFFFFFF),
+              fontSize: BulterFontSize.footnote,
+            ),
+          ),
+          const SizedBox(height: BulterSpacing.l),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(BulterRadius.pill),
+            child: LinearProgressIndicator(
+              value: 0.50,
+              minHeight: 6,
+              backgroundColor: Colors.white24,
+              valueColor: const AlwaysStoppedAnimation(BulterColors.warning),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GoalLearningList extends StatelessWidget {
+  const _GoalLearningList();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _Section(
+          title: '目标',
+          stream: AppDatabase.I.growthDao.watchActiveGoals(),
+        ),
+        const SizedBox(height: BulterSpacing.l),
+        _Section(title: '学习', stream: AppDatabase.I.growthDao.watchLearning()),
+      ],
+    );
+  }
+}
+
+class _Section extends StatelessWidget {
+  final String title;
+  final Stream<List<dynamic>> stream;
+  const _Section({required this.title, required this.stream});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<dynamic>>(
+      stream: stream,
+      builder: (context, snap) {
+        final items = snap.data ?? const [];
+        if (items.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: BulterSpacing.s),
+            child: Text(
+              '暂无 $title',
+              style: const TextStyle(
+                fontSize: BulterFontSize.footnote,
+                color: BulterColors.textTertiary,
+              ),
+            ),
+          );
+        }
+        return Column(
+          children: [for (final item in items) _Row(item: item, kind: title)],
+        );
+      },
+    );
+  }
+}
+
+class _Row extends StatelessWidget {
+  final dynamic item;
+  final String kind;
+  const _Row({required this.item, required this.kind});
+
+  static const _goalCatLabels = {
+    'career': ('事业', Icons.work_outline_rounded),
+    'skill': ('技能', Icons.school_outlined),
+    'health': ('健康', Icons.favorite_outline_rounded),
+    'relationship': ('关系', Icons.people_outline_rounded),
+    'finance': ('财务', Icons.account_balance_wallet_outlined),
+    'other': ('其他', Icons.flag_outlined),
+  };
 
   static const _sourceLabels = {
     'book': ('书', Icons.menu_book_rounded),
@@ -281,66 +250,131 @@ class _LearningRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final src = _sourceLabels[record.source] ?? _sourceLabels['book']!;
-    return ListCard(
-      brandColor: BulterColors.growth,
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => LearningForm(
-            title: '编辑学习记录',
-            initial: record,
-            onSubmit: (data) async {
-              await AppDatabase.I.growthDao.updateLearning(data);
-              if (context.mounted) Navigator.of(context).pop();
-            },
+    if (item is Goal) {
+      final g = item as Goal;
+      final cat = _goalCatLabels[g.category] ?? _goalCatLabels['other']!;
+      return ListCard(
+        brandColor: BulterColors.growth,
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => GoalForm(
+              title: '编辑目标',
+              initial: g,
+              onSubmit: (data) async {
+                await AppDatabase.I.growthDao.updateGoal(data);
+                if (context.mounted) Navigator.of(context).pop();
+              },
+            ),
           ),
         ),
-      ),
-      child: Row(
-        children: [
-          Icon(src.$2, color: BulterColors.growth, size: 22),
-          const SizedBox(width: BulterSpacing.m),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  record.title,
-                  style: const TextStyle(
-                    fontSize: BulterFontSize.bodyLg,
-                    fontWeight: BulterFontWeight.semibold,
-                    color: BulterColors.textPrimary,
-                  ),
-                ),
-                if ((record.author ?? '').isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2),
-                    child: Text(
-                      '${src.$1} · ${record.author}',
-                      style: const TextStyle(
-                        fontSize: BulterFontSize.footnote,
-                        color: BulterColors.textSecondary,
-                      ),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: BulterColors.growth.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(BulterRadius.s),
+              ),
+              child: Icon(cat.$2, color: BulterColors.growth, size: 16),
+            ),
+            const SizedBox(width: BulterSpacing.m),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    g.title,
+                    style: const TextStyle(
+                      fontSize: BulterFontSize.body,
+                      fontWeight: BulterFontWeight.semibold,
+                      color: BulterColors.textPrimary,
                     ),
                   ),
-              ],
+                  const SizedBox(height: 2),
+                  Text(
+                    '${cat.$1} · ${g.progress}%${g.targetDate != null ? " · ${g.targetDate!.year}-${g.targetDate!.month.toString().padLeft(2, "0")}-${g.targetDate!.day.toString().padLeft(2, "0")}" : ""}',
+                    style: const TextStyle(
+                      fontSize: BulterFontSize.caption,
+                      color: BulterColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    if (item is LearningRecord) {
+      final l = item as LearningRecord;
+      final src = _sourceLabels[l.source] ?? _sourceLabels['book']!;
+      return ListCard(
+        brandColor: BulterColors.growth,
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => LearningForm(
+              title: '编辑学习记录',
+              initial: l,
+              onSubmit: (data) async {
+                await AppDatabase.I.growthDao.updateLearning(data);
+                if (context.mounted) Navigator.of(context).pop();
+              },
             ),
           ),
-          if (record.rating != null)
-            Row(
-              children: [
-                for (var i = 0; i < 5; i++)
-                  Icon(
-                    i < record.rating!
-                        ? Icons.star_rounded
-                        : Icons.star_outline_rounded,
-                    color: BulterColors.warning,
-                    size: 14,
-                  ),
-              ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: BulterColors.growth.withValues(alpha: 0.16),
+                borderRadius: BorderRadius.circular(BulterRadius.s),
+              ),
+              child: Icon(src.$2, color: BulterColors.growth, size: 16),
             ),
-        ],
-      ),
-    );
+            const SizedBox(width: BulterSpacing.m),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l.title,
+                    style: const TextStyle(
+                      fontSize: BulterFontSize.body,
+                      fontWeight: BulterFontWeight.semibold,
+                      color: BulterColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${src.$1}${l.author != null ? " · ${l.author}" : ""}',
+                    style: const TextStyle(
+                      fontSize: BulterFontSize.caption,
+                      color: BulterColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (l.rating != null)
+              Row(
+                children: [
+                  for (var i = 0; i < 5; i++)
+                    Icon(
+                      i < l.rating!
+                          ? Icons.star_rounded
+                          : Icons.star_outline_rounded,
+                      color: BulterColors.warning,
+                      size: 12,
+                    ),
+                ],
+              ),
+          ],
+        ),
+      );
+    }
+    return const SizedBox.shrink();
   }
 }

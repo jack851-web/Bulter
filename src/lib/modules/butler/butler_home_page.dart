@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 
-import '../../components/ai_insight_card.dart';
-import '../../components/empty_state.dart';
-import '../../components/module_card.dart';
 import '../../theme/tokens.dart';
+import '../../features/relationship/relationship_home_page.dart';
+import '../../features/growth/growth_home_page.dart';
+import '../../features/wealth/wealth_home_page.dart';
+import '../../features/thought/thought_home_page.dart';
+import '../../features/health/health_home_page.dart';
 
-/// Butler 中枢主页：5 卡 Bento 布局。
+/// Butler 中枢主页（原型：phone-01-home.png）。
 ///
 /// 布局：
-///   1) AI 洞察大卡（顶部跨满宽）
-///   2) 4 张模块快览卡（2×2 网格）
+///   1) 顶部问候
+///   2) 橙色 Butler · 今日 AI 洞察大卡 + 2 个小状态胶囊
+///   3) 5 张全宽模块快览卡（关系 / 成长 / 财富 / 思想 / 健康）
 class ButlerHomePage extends StatelessWidget {
   const ButlerHomePage({super.key});
 
@@ -18,11 +21,10 @@ class ButlerHomePage extends StatelessWidget {
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
-        const SliverToBoxAdapter(child: SizedBox(height: BulterSpacing.s)),
         const SliverPadding(
           padding: EdgeInsets.fromLTRB(
             BulterSpacing.l,
-            BulterSpacing.s,
+            BulterSpacing.l,
             BulterSpacing.l,
             BulterSpacing.s,
           ),
@@ -35,77 +37,87 @@ class ButlerHomePage extends StatelessWidget {
             BulterSpacing.l,
             BulterSpacing.l,
           ),
-          sliver: SliverToBoxAdapter(
-            child: AiInsightCard(
-              headline: '本周你的健康分上升 3 分，预算执行率 78%',
-              body: '财富模块提醒：本月餐饮支出已超预算 ¥120，建议适当控制。'
-                  '成长模块有个 OKR 进入收尾期，可安排回顾。',
-            ),
-          ),
+          sliver: SliverToBoxAdapter(child: _ButlerInsight()),
         ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
             BulterSpacing.l,
             0,
             BulterSpacing.l,
-            BulterSpacing.l,
+            BulterSpacing.huge,
           ),
-          sliver: SliverGrid.count(
-            crossAxisCount: 2,
-            mainAxisSpacing: BulterSpacing.m,
-            crossAxisSpacing: BulterSpacing.m,
-            childAspectRatio: 0.95,
+          sliver: SliverList.list(
             children: const [
-              ModuleCard(
-                title: '王老师答应介绍算法工程师',
-                subtitle: '关系 · 3 天前',
+              SizedBox(height: BulterSpacing.m),
+              _ModuleCard(
+                moduleName: '关系',
                 brandColor: BulterColors.relationship,
                 icon: Icons.favorite_rounded,
-                badge: '新',
+                subtitle: '让关系网被看见',
+                headline: '李华、妈妈、王老师是你的核心 3 人',
+                chips: [_ChipData('待联系', '2 位'), _ChipData('人情', '1 笔未还')],
+                onTap: _openRelationship,
               ),
-              ModuleCard(
-                title: '本月餐饮超预算 ¥120',
-                subtitle: '财富 · 6 小时前',
+              SizedBox(height: BulterSpacing.m),
+              _ModuleCard(
+                moduleName: '成长',
+                brandColor: BulterColors.growth,
+                icon: Icons.trending_up_rounded,
+                subtitle: '把模糊的愿望变成可追踪的目标',
+                headline: 'OKR 收尾期：完成《Kotlin 协程》读书',
+                chips: [_ChipData('OKR 进度', '50%'), _ChipData('进行中', '3 项')],
+                onTap: _openGrowth,
+              ),
+              SizedBox(height: BulterSpacing.m),
+              _ModuleCard(
+                moduleName: '财富',
                 brandColor: BulterColors.wealth,
                 icon: Icons.account_balance_wallet_rounded,
-                badge: '!',
+                subtitle: '知道钱去哪里',
+                headline: '本月餐饮支出已超预算 ¥120',
+                chips: [_ChipData('余额', '¥4,820'), _ChipData('预算剩余', '¥680')],
+                onTap: _openWealth,
               ),
-              ModuleCard(
-                title: '《置身事内》读后感完成',
-                subtitle: '思想 · 昨天',
+              SizedBox(height: BulterSpacing.m),
+              _ModuleCard(
+                moduleName: '思想',
                 brandColor: BulterColors.thought,
                 icon: Icons.menu_book_rounded,
+                subtitle: '把灵感沉淀为可回看的笔记',
+                headline: '《置身事内》读后感完成',
+                chips: [_ChipData('想法', '5 条'), _ChipData('信件', '2 封')],
+                onTap: _openThought,
               ),
-              ModuleCard(
-                title: '体脂率 22.1% · 较上月 -0.8',
-                subtitle: '健康 · 今天',
+              SizedBox(height: BulterSpacing.m),
+              _ModuleCard(
+                moduleName: '健康',
                 brandColor: BulterColors.health,
                 icon: Icons.favorite_outline_rounded,
-                badge: '↑',
+                subtitle: '身体是其他一切的基础',
+                headline: '日均睡眠 7.2h，体脂 22.1%',
+                chips: [_ChipData('记录', '14 次'), _ChipData('睡眠均值', '8.0h')],
+                onTap: _openHealth,
               ),
             ],
           ),
         ),
-        const SliverPadding(
-          padding: EdgeInsets.fromLTRB(
-            BulterSpacing.l,
-            0,
-            BulterSpacing.l,
-            BulterSpacing.l,
-          ),
-          sliver: SliverToBoxAdapter(child: _QuickActions()),
-        ),
-        const SliverPadding(
-          padding: EdgeInsets.fromLTRB(
-            BulterSpacing.l,
-            0,
-            BulterSpacing.l,
-            BulterSpacing.huge,
-          ),
-          sliver: SliverToBoxAdapter(child: _RecentTimeline()),
-        ),
       ],
     );
+  }
+
+  static void _openRelationship(BuildContext context) =>
+      _navigate(context, const RelationshipHomePage());
+  static void _openGrowth(BuildContext context) =>
+      _navigate(context, const GrowthHomePage());
+  static void _openWealth(BuildContext context) =>
+      _navigate(context, const WealthHomePage());
+  static void _openThought(BuildContext context) =>
+      _navigate(context, const ThoughtHomePage());
+  static void _openHealth(BuildContext context) =>
+      _navigate(context, const HealthHomePage());
+
+  static void _navigate(BuildContext context, Widget page) {
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
   }
 }
 
@@ -118,14 +130,14 @@ class _Greeting extends StatelessWidget {
     final greeting = hour < 6
         ? '凌晨好'
         : hour < 11
-            ? '早上好'
-            : hour < 13
-                ? '中午好'
-                : hour < 18
-                    ? '下午好'
-                    : hour < 22
-                        ? '晚上好'
-                        : '夜深了';
+        ? '早上好'
+        : hour < 13
+        ? '中午好'
+        : hour < 18
+        ? '下午好'
+        : hour < 22
+        ? '晚上好'
+        : '夜深了';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -134,16 +146,26 @@ class _Greeting extends StatelessWidget {
           style: const TextStyle(
             fontSize: BulterFontSize.body,
             color: BulterColors.textSecondary,
+            height: 1.4,
           ),
         ),
-        const SizedBox(height: BulterSpacing.xxs),
+        const SizedBox(height: 2),
         const Text(
-          '今天想做点什么？',
+          '下午好，小明',
           style: TextStyle(
             fontSize: BulterFontSize.displayS,
             fontWeight: BulterFontWeight.bold,
             color: BulterColors.textPrimary,
-            height: 1.1,
+            height: 1.15,
+          ),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          '今天 3 件事待已入栈，4 件事待呈',
+          style: TextStyle(
+            fontSize: BulterFontSize.footnote,
+            color: BulterColors.textSecondary,
+            height: 1.4,
           ),
         ),
       ],
@@ -151,67 +173,115 @@ class _Greeting extends StatelessWidget {
   }
 }
 
-class _QuickActions extends StatelessWidget {
-  const _QuickActions();
+class _ButlerInsight extends StatelessWidget {
+  const _ButlerInsight();
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          '快捷操作',
-          style: TextStyle(
-            fontSize: BulterFontSize.titleS,
-            fontWeight: BulterFontWeight.semibold,
-            color: BulterColors.textPrimary,
+    return Container(
+      padding: const EdgeInsets.all(BulterSpacing.xl),
+      decoration: BoxDecoration(
+        color: BulterColors.butler.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(BulterRadius.xxl),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'AI 助理',
+            style: TextStyle(
+              fontSize: BulterFontSize.caption,
+              fontWeight: BulterFontWeight.semibold,
+              color: BulterColors.butler,
+              letterSpacing: 0.4,
+            ),
           ),
-        ),
-        const SizedBox(height: BulterSpacing.m),
-        Row(
-          children: [
-            Expanded(
-              child: _ActionTile(
-                icon: Icons.add_rounded,
-                label: '记一笔',
-                color: BulterColors.wealth,
-                onTap: () {},
-              ),
+          const SizedBox(height: BulterSpacing.s),
+          const Text(
+            'Butler · 今日',
+            style: TextStyle(
+              fontSize: BulterFontSize.titleM,
+              fontWeight: BulterFontWeight.bold,
+              color: BulterColors.textPrimary,
+              height: 1.25,
             ),
-            const SizedBox(width: BulterSpacing.m),
-            Expanded(
-              child: _ActionTile(
-                icon: Icons.chat_bubble_outline_rounded,
-                label: '问 AI',
-                color: BulterColors.cta,
-                onTap: () {},
-              ),
+          ),
+          const SizedBox(height: BulterSpacing.s),
+          const Text(
+            '今天有 3 件事无法被你来决定。\n已为已规划的时间段。',
+            style: TextStyle(
+              fontSize: BulterFontSize.body,
+              color: BulterColors.textSecondary,
+              height: 1.5,
             ),
-            const SizedBox(width: BulterSpacing.m),
-            Expanded(
-              child: _ActionTile(
-                icon: Icons.crop_square_rounded,
-                label: '长按截图',
-                color: BulterColors.butler,
-                onTap: () {},
-              ),
-            ),
-          ],
-        ),
-      ],
+          ),
+          const SizedBox(height: BulterSpacing.l),
+          Row(
+            children: const [
+              _ButlerPill(label: '2 个待呈'),
+              SizedBox(width: BulterSpacing.s),
+              _ButlerPill(label: '1 个待人'),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _ActionTile extends StatelessWidget {
-  final IconData icon;
+class _ButlerPill extends StatelessWidget {
   final String label;
-  final Color color;
-  final VoidCallback onTap;
-  const _ActionTile({
+  const _ButlerPill({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: BulterSpacing.m,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color: BulterColors.surface,
+        borderRadius: BorderRadius.circular(BulterRadius.pill),
+        border: Border.all(
+          color: BulterColors.butler.withValues(alpha: 0.35),
+          width: 0.8,
+        ),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: BulterFontSize.footnote,
+          fontWeight: BulterFontWeight.semibold,
+          color: BulterColors.textPrimary,
+        ),
+      ),
+    );
+  }
+}
+
+class _ChipData {
+  final String label;
+  final String value;
+  const _ChipData(this.label, this.value);
+}
+
+class _ModuleCard extends StatelessWidget {
+  final String moduleName;
+  final Color brandColor;
+  final IconData icon;
+  final String subtitle;
+  final String headline;
+  final List<_ChipData> chips;
+  final ValueChanged<BuildContext> onTap;
+
+  const _ModuleCard({
+    required this.moduleName,
+    required this.brandColor,
     required this.icon,
-    required this.label,
-    required this.color,
+    required this.subtitle,
+    required this.headline,
+    required this.chips,
     required this.onTap,
   });
 
@@ -220,38 +290,80 @@ class _ActionTile extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(BulterRadius.l),
-        onTap: onTap,
+        borderRadius: BorderRadius.circular(BulterRadius.xxl),
+        onTap: () => onTap(context),
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            vertical: BulterSpacing.l,
-            horizontal: BulterSpacing.s,
-          ),
+          padding: const EdgeInsets.all(BulterSpacing.xl),
           decoration: BoxDecoration(
-            color: BulterColors.surface,
-            borderRadius: BorderRadius.circular(BulterRadius.l),
-            border: Border.all(color: BulterColors.divider, width: 0.5),
+            color: brandColor.withValues(alpha: 0.18),
+            borderRadius: BorderRadius.circular(BulterRadius.xxl),
           ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(BulterRadius.m),
-                ),
-                child: Icon(icon, color: color, size: 20),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: BulterSpacing.s + 2,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: brandColor,
+                      borderRadius: BorderRadius.circular(BulterRadius.pill),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(icon, color: BulterColors.ctaText, size: 12),
+                        const SizedBox(width: 4),
+                        Text(
+                          moduleName,
+                          style: const TextStyle(
+                            color: BulterColors.ctaText,
+                            fontSize: BulterFontSize.caption,
+                            fontWeight: BulterFontWeight.bold,
+                            letterSpacing: 0.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: brandColor,
+                    size: 18,
+                  ),
+                ],
               ),
-              const SizedBox(height: BulterSpacing.s),
+              const SizedBox(height: BulterSpacing.m),
               Text(
-                label,
+                headline,
+                style: const TextStyle(
+                  fontSize: BulterFontSize.bodyLg,
+                  fontWeight: BulterFontWeight.semibold,
+                  color: BulterColors.textPrimary,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
                 style: const TextStyle(
                   fontSize: BulterFontSize.footnote,
-                  color: BulterColors.textPrimary,
-                  fontWeight: BulterFontWeight.medium,
+                  color: BulterColors.textSecondary,
+                  height: 1.4,
                 ),
               ),
+              if (chips.isNotEmpty) ...[
+                const SizedBox(height: BulterSpacing.m),
+                Wrap(
+                  spacing: BulterSpacing.s,
+                  runSpacing: BulterSpacing.s,
+                  children: [for (final c in chips) _ModulePill(data: c)],
+                ),
+              ],
             ],
           ),
         ),
@@ -260,142 +372,41 @@ class _ActionTile extends StatelessWidget {
   }
 }
 
-class _RecentTimeline extends StatelessWidget {
-  const _RecentTimeline();
-
-  @override
-  Widget build(BuildContext context) {
-    final items = [
-      _TimelineItem(
-        color: BulterColors.wealth,
-        icon: Icons.account_balance_wallet_rounded,
-        title: '记录了一笔支出',
-        subtitle: '午餐 · 美式 · ¥38',
-        time: '2 小时前',
-      ),
-      _TimelineItem(
-        color: BulterColors.thought,
-        icon: Icons.menu_book_rounded,
-        title: '完成读后感',
-        subtitle: '《置身事内》— 中国政府与经济发展',
-        time: '昨天',
-      ),
-      _TimelineItem(
-        color: BulterColors.health,
-        icon: Icons.favorite_outline_rounded,
-        title: '记录体重',
-        subtitle: '68.2 kg · 体脂 22.1%',
-        time: '昨天',
-      ),
-      _TimelineItem(
-        color: BulterColors.relationship,
-        icon: Icons.favorite_rounded,
-        title: '给妈妈打了电话',
-        subtitle: '通话 18 分钟',
-        time: '前天',
-      ),
-    ];
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          '最近',
-          style: TextStyle(
-            fontSize: BulterFontSize.titleS,
-            fontWeight: BulterFontWeight.semibold,
-            color: BulterColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: BulterSpacing.m),
-        ...items.map((e) => Padding(
-              padding: const EdgeInsets.only(bottom: BulterSpacing.s),
-              child: _TimelineRow(item: e),
-            )),
-        if (items.isEmpty)
-          const EmptyState(
-            icon: Icons.timeline_rounded,
-            title: '还没有活动',
-            hint: '从对话或手动录入开始，AI 会自动汇总到时间线',
-          ),
-      ],
-    );
-  }
-}
-
-class _TimelineItem {
-  final Color color;
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final String time;
-  const _TimelineItem({
-    required this.color,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.time,
-  });
-}
-
-class _TimelineRow extends StatelessWidget {
-  final _TimelineItem item;
-  const _TimelineRow({required this.item});
+class _ModulePill extends StatelessWidget {
+  final _ChipData data;
+  const _ModulePill({required this.data});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(BulterSpacing.m),
+      padding: const EdgeInsets.symmetric(
+        horizontal: BulterSpacing.m,
+        vertical: 6,
+      ),
       decoration: BoxDecoration(
         color: BulterColors.surface,
-        borderRadius: BorderRadius.circular(BulterRadius.l),
-        border: Border.all(color: BulterColors.divider, width: 0.5),
+        borderRadius: BorderRadius.circular(BulterRadius.pill),
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: item.color.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(BulterRadius.s),
+      child: Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(
+              text: '${data.label} ',
+              style: const TextStyle(
+                fontSize: BulterFontSize.footnote,
+                color: BulterColors.textSecondary,
+              ),
             ),
-            child: Icon(item.icon, size: 16, color: item.color),
-          ),
-          const SizedBox(width: BulterSpacing.m),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.title,
-                  style: const TextStyle(
-                    fontSize: BulterFontSize.body,
-                    fontWeight: BulterFontWeight.semibold,
-                    color: BulterColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  item.subtitle,
-                  style: const TextStyle(
-                    fontSize: BulterFontSize.footnote,
-                    color: BulterColors.textSecondary,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+            TextSpan(
+              text: data.value,
+              style: const TextStyle(
+                fontSize: BulterFontSize.footnote,
+                fontWeight: BulterFontWeight.bold,
+                color: BulterColors.textPrimary,
+              ),
             ),
-          ),
-          const SizedBox(width: BulterSpacing.s),
-          Text(
-            item.time,
-            style: const TextStyle(
-              fontSize: BulterFontSize.caption,
-              color: BulterColors.textTertiary,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

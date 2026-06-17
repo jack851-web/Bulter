@@ -1,7 +1,7 @@
 name: bulter
 description: "Bulter - AI 人生管家。本地优先、越用越懂用户的个人 Agent 工具。"
 publish_to: 'none'
-version: 0.1.0+1
+version: 0.3.1+5
 
 environment:
   sdk: ^3.12.1

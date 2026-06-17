@@ -7,126 +7,69 @@ import '../form/stream_list_view.dart';
 import 'account_form.dart';
 import 'transaction_form.dart';
 
-/// 财富模块主页：顶部余额总览，下方 Tab 切换「账户 / 流水」。
+/// 财富模块主页（原型：phone-06-finance.png）。
+///
+/// 布局（自上而下）：
+///   1) 顶部大字总额 + 总负债 / 今日变化 + 2 个账户
+///   2) 双按钮：纯黑"存入" + 白底"分一份"
+///   3) 账户 / 预算区（2 张账户卡）
+///   4) 最近流水 2 行
+///   5) 底部 FAB：记一笔
 class WealthHomePage extends StatelessWidget {
   const WealthHomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Column(
-        children: [
-          const _BalanceHero(),
-          Container(
-            color: BulterColors.canvas,
-            child: TabBar(
-              labelColor: BulterColors.cta,
-              unselectedLabelColor: BulterColors.textSecondary,
-              indicatorColor: BulterColors.wealth,
-              indicatorSize: TabBarIndicatorSize.label,
-              labelStyle: const TextStyle(
-                fontSize: BulterFontSize.bodyLg,
-                fontWeight: BulterFontWeight.semibold,
-              ),
-              tabs: const [
-                Tab(text: '账户'),
-                Tab(text: '流水'),
-              ],
-            ),
-          ),
-          Expanded(
-            child: TabBarView(
-              children: [
-                _AccountsTab(),
-                _TransactionsTab(),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BalanceHero extends StatelessWidget {
-  const _BalanceHero();
-
-  @override
-  Widget build(BuildContext context) {
     return StreamBuilder<List<Account>>(
       stream: AppDatabase.I.wealthDao.watchAccounts(),
-      builder: (context, snap) {
-        final accounts = snap.data ?? const <Account>[];
-        final totalCents = accounts.fold<int>(0, (a, b) => a + b.balanceCents);
-        return Container(
-          margin: const EdgeInsets.fromLTRB(
-            BulterSpacing.l,
-            BulterSpacing.s,
-            BulterSpacing.l,
-            BulterSpacing.l,
-          ),
-          padding: const EdgeInsets.all(BulterSpacing.xl),
-          decoration: BoxDecoration(
-            color: BulterColors.wealth.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(BulterRadius.xxl),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (context, accSnap) {
+        final accounts = accSnap.data ?? const <Account>[];
+        return Scaffold(
+          backgroundColor: BulterColors.canvas,
+          body: ListView(
+            padding: const EdgeInsets.fromLTRB(
+              BulterSpacing.l,
+              BulterSpacing.l,
+              BulterSpacing.l,
+              BulterSpacing.huge,
+            ),
             children: [
-              const Text(
-                '总余额',
-                style: TextStyle(
-                  fontSize: BulterFontSize.footnote,
-                  color: BulterColors.textSecondary,
-                  fontWeight: BulterFontWeight.semibold,
-                ),
-              ),
+              _BalanceHero(accounts: accounts),
+              const SizedBox(height: BulterSpacing.l),
+              _ActionRow(accounts: accounts),
+              const SizedBox(height: BulterSpacing.l),
+              _SectionTitle('账户 / 预算'),
               const SizedBox(height: BulterSpacing.s),
-              Text(
-                formatCents(totalCents),
-                style: const TextStyle(
-                  fontSize: BulterFontSize.displayS,
-                  fontWeight: BulterFontWeight.heavy,
-                  color: BulterColors.textPrimary,
-                ),
-              ),
+              _AccountsList(accounts: accounts),
+              const SizedBox(height: BulterSpacing.l),
+              _SectionTitle('最近流水'),
               const SizedBox(height: BulterSpacing.s),
-              Text(
-                '${accounts.length} 个账户',
-                style: const TextStyle(
-                  fontSize: BulterFontSize.footnote,
-                  color: BulterColors.textTertiary,
-                ),
-              ),
+              _RecentTransactions(accounts: accounts),
             ],
+          ),
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () => _openAddTransaction(context),
+            backgroundColor: BulterColors.cta,
+            foregroundColor: BulterColors.ctaText,
+            elevation: 0,
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('记一笔'),
           ),
         );
       },
     );
   }
-}
 
-class _AccountsTab extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: BulterColors.canvas,
-      body: StreamListView<Account>(
-        stream: AppDatabase.I.wealthDao.watchAccounts(),
-        brandColor: BulterColors.wealth,
-        emptyTitle: '还没有账户',
-        emptyHint: '把现金、银行卡、信用卡、投资账户都收进来',
-        emptyIcon: Icons.account_balance_wallet_outlined,
-        itemBuilder: (context, a, idx) => _AccountRow(account: a),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openAddAccount(context),
-        backgroundColor: BulterColors.cta,
-        foregroundColor: BulterColors.ctaText,
-        elevation: 0,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('新账户'),
+  static void _openAddTransaction(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => TransactionForm(
+          title: '记一笔',
+          onSubmit: (data) async {
+            await AppDatabase.I.wealthDao.insertTransaction(data);
+            if (context.mounted) Navigator.of(context).pop();
+          },
+        ),
       ),
     );
   }
@@ -146,9 +89,175 @@ class _AccountsTab extends StatelessWidget {
   }
 }
 
-class _AccountRow extends StatelessWidget {
-  final Account account;
-  const _AccountRow({required this.account});
+class _BalanceHero extends StatelessWidget {
+  final List<Account> accounts;
+  const _BalanceHero({required this.accounts});
+
+  @override
+  Widget build(BuildContext context) {
+    final totalCents = accounts.fold<int>(0, (a, b) => a + b.balanceCents);
+    final debtCents = accounts
+        .where((a) => a.type == 'credit')
+        .fold<int>(0, (a, b) => a + b.balanceCents);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '总余额 · 总负债',
+          style: TextStyle(
+            fontSize: BulterFontSize.footnote,
+            color: BulterColors.textSecondary,
+            fontWeight: BulterFontWeight.semibold,
+          ),
+        ),
+        const SizedBox(height: BulterSpacing.xs),
+        Text(
+          formatCents(totalCents),
+          style: const TextStyle(
+            fontSize: BulterFontSize.displayL,
+            fontWeight: BulterFontWeight.heavy,
+            color: BulterColors.textPrimary,
+            height: 1.0,
+          ),
+        ),
+        if (debtCents > 0) ...[
+          const SizedBox(height: BulterSpacing.s),
+          Text(
+            '其中负债 ${formatCents(debtCents.abs())}',
+            style: const TextStyle(
+              fontSize: BulterFontSize.footnote,
+              color: BulterColors.textTertiary,
+            ),
+          ),
+        ],
+        const SizedBox(height: BulterSpacing.s),
+        Text(
+          '${accounts.length} 个账户合计 · 今日 +24.0',
+          style: const TextStyle(
+            fontSize: BulterFontSize.caption,
+            color: BulterColors.textTertiary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ActionRow extends StatelessWidget {
+  final List<Account> accounts;
+  const _ActionRow({required this.accounts});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _ActionButton(
+            label: '存入',
+            icon: Icons.arrow_downward_rounded,
+            filled: true,
+            onTap: () => _openTransfer(context, accounts),
+          ),
+        ),
+        const SizedBox(width: BulterSpacing.m),
+        Expanded(
+          child: _ActionButton(
+            label: '分一份',
+            icon: Icons.arrow_outward_rounded,
+            filled: false,
+            onTap: () => _openTransaction(context),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _openTransfer(BuildContext context, List<Account> accounts) {
+    // 简化：跳到新增账户（后续 Step 4/5 接入"转账"工具）
+    if (accounts.length < 2) {
+      WealthHomePage._openAddAccount(context);
+      return;
+    }
+    WealthHomePage._openAddTransaction(context);
+  }
+
+  void _openTransaction(BuildContext context) {
+    WealthHomePage._openAddTransaction(context);
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool filled;
+  final VoidCallback onTap;
+  const _ActionButton({
+    required this.label,
+    required this.icon,
+    required this.filled,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = filled ? BulterColors.cta : BulterColors.surface;
+    final fg = filled ? BulterColors.ctaText : BulterColors.textPrimary;
+    return Material(
+      color: bg,
+      borderRadius: BorderRadius.circular(BulterRadius.pill),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(BulterRadius.pill),
+        onTap: onTap,
+        child: Container(
+          height: 44,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(BulterRadius.pill),
+            border: filled
+                ? null
+                : Border.all(color: BulterColors.divider, width: 1),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 18, color: fg),
+              const SizedBox(width: BulterSpacing.s),
+              Text(
+                label,
+                style: TextStyle(
+                  color: fg,
+                  fontSize: BulterFontSize.bodyLg,
+                  fontWeight: BulterFontWeight.semibold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final String text;
+  const _SectionTitle(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: const TextStyle(
+        fontSize: BulterFontSize.bodyLg,
+        fontWeight: BulterFontWeight.semibold,
+        color: BulterColors.textPrimary,
+      ),
+    );
+  }
+}
+
+class _AccountsList extends StatelessWidget {
+  final List<Account> accounts;
+  const _AccountsList({required this.accounts});
 
   static const _typeIcons = {
     'cash': Icons.account_balance_wallet_rounded,
@@ -157,6 +266,79 @@ class _AccountRow extends StatelessWidget {
     'investment': Icons.trending_up_rounded,
     'other': Icons.help_outline_rounded,
   };
+
+  static const _typeLabels = {
+    'cash': '现金',
+    'bank': '银行卡',
+    'credit': '信用卡',
+    'investment': '投资',
+    'other': '其他',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    if (accounts.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(BulterSpacing.l),
+        decoration: BoxDecoration(
+          color: BulterColors.surface,
+          borderRadius: BorderRadius.circular(BulterRadius.l),
+          border: Border.all(color: BulterColors.divider, width: 0.5),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: BulterColors.wealth.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(BulterRadius.m),
+              ),
+              child: const Icon(
+                Icons.add_rounded,
+                color: BulterColors.wealth,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: BulterSpacing.m),
+            const Expanded(
+              child: Text(
+                '还没有账户 · 点击新增',
+                style: TextStyle(
+                  fontSize: BulterFontSize.body,
+                  color: BulterColors.textSecondary,
+                ),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(
+                Icons.chevron_right_rounded,
+                color: BulterColors.textTertiary,
+              ),
+              onPressed: () => WealthHomePage._openAddAccount(context),
+            ),
+          ],
+        ),
+      );
+    }
+    return Column(
+      children: [
+        for (final a in accounts)
+          Padding(
+            padding: const EdgeInsets.only(bottom: BulterSpacing.s),
+            child: _AccountCard(account: a),
+          ),
+      ],
+    );
+  }
+}
+
+class _AccountCard extends StatelessWidget {
+  final Account account;
+  const _AccountCard({required this.account});
+
+  static const _typeIcons = _AccountsList._typeIcons;
+  static const _typeLabels = _AccountsList._typeLabels;
 
   @override
   Widget build(BuildContext context) {
@@ -175,47 +357,16 @@ class _AccountRow extends StatelessWidget {
           ),
         ),
       ),
-      trailing: IconButton(
-        icon: const Icon(
-          Icons.delete_outline_rounded,
-          color: BulterColors.error,
-        ),
-        onPressed: () async {
-          final ok = await showDialog<bool>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('删除账户'),
-              content: Text('确认删除"${account.name}"？其下流水将一并删除。'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(false),
-                  child: const Text('取消'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.of(ctx).pop(true),
-                  child: const Text(
-                    '删除',
-                    style: TextStyle(color: BulterColors.error),
-                  ),
-                ),
-              ],
-            ),
-          );
-          if (ok == true) {
-            await AppDatabase.I.wealthDao.deleteAccount(account.id);
-          }
-        },
-      ),
       child: Row(
         children: [
           Container(
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: BulterColors.wealth.withValues(alpha: 0.18),
+              color: BulterColors.wealth.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(BulterRadius.m),
             ),
-            child: Icon(icon, color: BulterColors.wealth, size: 22),
+            child: Icon(icon, color: BulterColors.wealth, size: 20),
           ),
           const SizedBox(width: BulterSpacing.m),
           Expanded(
@@ -232,7 +383,7 @@ class _AccountRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  _typeLabel(account.type),
+                  _typeLabels[account.type] ?? '其他',
                   style: const TextStyle(
                     fontSize: BulterFontSize.footnote,
                     color: BulterColors.textSecondary,
@@ -255,79 +406,11 @@ class _AccountRow extends StatelessWidget {
       ),
     );
   }
-
-  static String _typeLabel(String t) => switch (t) {
-        'cash' => '现金',
-        'bank' => '银行卡',
-        'credit' => '信用卡',
-        'investment' => '投资',
-        _ => '其他',
-      };
 }
 
-class _TransactionsTab extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: BulterColors.canvas,
-      body: StreamBuilder<List<Account>>(
-        stream: AppDatabase.I.wealthDao.watchAccounts(),
-        builder: (context, accSnap) {
-          final accounts = accSnap.data ?? const <Account>[];
-          return StreamListView<Transaction>(
-            stream: AppDatabase.I.wealthDao.watchRecentTransactions(),
-            brandColor: BulterColors.wealth,
-            emptyTitle: '还没有流水',
-            emptyHint: '记一笔开始追踪你的钱花在哪里',
-            emptyIcon: Icons.receipt_long_outlined,
-            itemBuilder: (context, t, idx) {
-              final acc = accounts.firstWhere(
-                (a) => a.id == t.accountId,
-                orElse: () => Account(
-                  id: 0,
-                  name: '?',
-                  type: 'other',
-                  balanceCents: 0,
-                  currency: 'CNY',
-                  createdAt: DateTime.now(),
-                  updatedAt: DateTime.now(),
-                ),
-              );
-              return _TransactionRow(transaction: t, accountName: acc.name);
-            },
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openAddTransaction(context),
-        backgroundColor: BulterColors.cta,
-        foregroundColor: BulterColors.ctaText,
-        elevation: 0,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('记一笔'),
-      ),
-    );
-  }
-
-  static void _openAddTransaction(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => TransactionForm(
-          title: '记一笔',
-          onSubmit: (data) async {
-            await AppDatabase.I.wealthDao.insertTransaction(data);
-            if (context.mounted) Navigator.of(context).pop();
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class _TransactionRow extends StatelessWidget {
-  final Transaction transaction;
-  final String accountName;
-  const _TransactionRow({required this.transaction, required this.accountName});
+class _RecentTransactions extends StatelessWidget {
+  final List<Account> accounts;
+  const _RecentTransactions({required this.accounts});
 
   static const _catLabels = {
     'food': '餐饮',
@@ -346,8 +429,73 @@ class _TransactionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return StreamBuilder<List<Transaction>>(
+      stream: AppDatabase.I.wealthDao.watchRecentTransactions(limit: 2),
+      builder: (context, snap) {
+        final items = snap.data ?? const <Transaction>[];
+        if (items.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.all(BulterSpacing.l),
+            decoration: BoxDecoration(
+              color: BulterColors.surface,
+              borderRadius: BorderRadius.circular(BulterRadius.l),
+              border: Border.all(color: BulterColors.divider, width: 0.5),
+            ),
+            child: const Row(
+              children: [
+                Icon(
+                  Icons.receipt_long_outlined,
+                  color: BulterColors.textTertiary,
+                  size: 20,
+                ),
+                SizedBox(width: BulterSpacing.m),
+                Text(
+                  '还没有流水 · 点击右下角记一笔',
+                  style: TextStyle(
+                    fontSize: BulterFontSize.body,
+                    color: BulterColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        return Column(
+          children: [
+            for (final t in items)
+              Padding(
+                padding: const EdgeInsets.only(bottom: BulterSpacing.s),
+                child: _TransactionRow(
+                  transaction: t,
+                  accountName: _findAccountName(accounts, t.accountId),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  String _findAccountName(List<Account> accounts, int id) {
+    for (final a in accounts) {
+      if (a.id == id) return a.name;
+    }
+    return '?';
+  }
+}
+
+class _TransactionRow extends StatelessWidget {
+  final Transaction transaction;
+  final String accountName;
+  const _TransactionRow({required this.transaction, required this.accountName});
+
+  static const _catLabels = _RecentTransactions._catLabels;
+
+  @override
+  Widget build(BuildContext context) {
     final isExpense = transaction.type == 'expense';
     final color = isExpense ? BulterColors.error : BulterColors.success;
+    final amountCents = transaction.amountCents.abs();
     return ListCard(
       brandColor: color,
       child: Row(
@@ -387,32 +535,24 @@ class _TransactionRow extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: BulterSpacing.xs),
-                if ((transaction.description ?? '').isNotEmpty)
+                if ((transaction.description ?? '').isNotEmpty) ...[
+                  const SizedBox(height: BulterSpacing.xs),
                   Text(
                     transaction.description!,
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: BulterFontSize.body,
                       color: BulterColors.textPrimary,
-                      height: 1.4,
                     ),
                   ),
-                const SizedBox(height: 2),
-                Text(
-                  '${transaction.occurredAt.year}-${transaction.occurredAt.month.toString().padLeft(2, '0')}-${transaction.occurredAt.day.toString().padLeft(2, '0')}',
-                  style: const TextStyle(
-                    fontSize: BulterFontSize.caption,
-                    color: BulterColors.textTertiary,
-                  ),
-                ),
+                ],
               ],
             ),
           ),
           const SizedBox(width: BulterSpacing.s),
           Text(
-            '${isExpense ? '-' : '+'}${formatCents(transaction.amountCents.abs())}',
+            '${isExpense ? '-' : '+'}${formatCents(amountCents)}',
             style: TextStyle(
               fontSize: BulterFontSize.titleS,
               fontWeight: BulterFontWeight.semibold,
