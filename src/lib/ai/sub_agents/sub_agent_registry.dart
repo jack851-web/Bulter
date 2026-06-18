@@ -34,6 +34,10 @@ class SubAgentRegistry {
   ToolRegistry? toolsOf(String moduleId) => _isolatedToolRegistries[moduleId];
   List<SpecialistAgent> get all => _agents.values.toList(growable: false);
 
+  /// 全部子 Agent 的隔离 ToolRegistry（主模型用 bootstrap 给它们注入 executor）。
+  Map<String, ToolRegistry> get allToolRegistries =>
+      Map.unmodifiable(_isolatedToolRegistries);
+
   /// 便利方法：从 ModuleRegistry 一次性同步
   void syncFromModuleRegistry() {
     registerAllFromModules(ModuleRegistry.instance.all);

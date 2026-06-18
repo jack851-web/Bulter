@@ -6,13 +6,7 @@ import '../../ai/model_registry.dart';
 import '../../components/svg_icon.dart';
 import '../../theme/tokens.dart';
 
-/// AI 对话页（Step 4：接入真实 LLM 流式对话）。
-///
-/// 布局（自上而下）：
-///   1) 顶部状态条：在线 · N 件事已被追踪
-///   2) 消息流（AI 左侧浅色泡 / 用户右侧纯黑泡）
-///   3) 黑色 CTA 胶囊按钮 / 错误占位 / 加载三态
-///   4) 底部输入区（单行输入 + 圆形黑色发送）
+/// AI 对话页（Step 5：流式 + ReAct 工具 + 二次确认）。
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
 
@@ -30,7 +24,6 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void initState() {
     super.initState();
-    // 起始欢迎（不计入 rounds）
     _items.add(
       _ChatItem.bubble(
         _Role.assistant,
@@ -46,6 +39,8 @@ class _ChatPageState extends State<ChatPage> {
     super.dispose();
   }
 
+  ChatOptions get _opts => const ChatOptions();
+
   Future<void> _send() async {
     if (_sending) return;
     final text = _controller.text.trim();
@@ -57,7 +52,6 @@ class _ChatPageState extends State<ChatPage> {
     });
     _scrollToBottom();
 
-    // 写入短记忆
     _memory.append(
       ChatMessage(
         role: ChatRole.user,
@@ -66,8 +60,8 @@ class _ChatPageState extends State<ChatPage> {
       ),
     );
 
-    // 预占位 assistant 泡（流式更新 content）
     final placeholder = _ChatItem.bubble(_Role.assistant, '');
+    placeholder.streaming = true;
     setState(() => _items.add(placeholder));
 
     String accumulated = '';
@@ -75,13 +69,14 @@ class _ChatPageState extends State<ChatPage> {
       memory: _memory,
       callback: (event) {
         if (!mounted) return;
-        if (event.isError) {
-          final err = event.error;
-          String msg = 'AI 调用失败';
-          if (err is AiError) msg = err.message;
+        if (event.error != null) {
+          final msg = event.error is AiError
+              ? (event.error as AiError).message
+              : event.error.toString();
           setState(() {
             placeholder.content = msg;
             placeholder.isError = true;
+            placeholder.streaming = false;
             _sending = false;
           });
           return;
@@ -92,24 +87,170 @@ class _ChatPageState extends State<ChatPage> {
           _memory.updateLastAssistantContent(event.delta);
           _scrollToBottom();
         }
+        if (event.hasToolCalls) {
+          setState(() {
+            for (final c in event.toolCalls) {
+              _items.add(_ChatItem.toolCall(c));
+            }
+            _scrollToBottom();
+          });
+        }
+        if (event.hasToolResults) {
+          setState(() {
+            for (final r in event.toolResults) {
+              _items.add(_ChatItem.toolResult(r));
+            }
+            _scrollToBottom();
+          });
+        }
         if (event.done) {
           setState(() {
+            placeholder.streaming = false;
             _sending = false;
             if (accumulated.isEmpty && !placeholder.isError) {
-              placeholder.content = '（无回复，请检查网络或 API Key）';
+              placeholder.content = '（无回复）';
             }
           });
-          if (accumulated.isNotEmpty) {
-            _memory.append(
-              ChatMessage(
-                role: ChatRole.assistant,
-                content: accumulated,
-                createdAt: DateTime.now(),
-              ),
-            );
+          // 处理 pending_confirmation：弹二次确认
+          for (final r in event.toolResults) {
+            if (r.result.needsConfirmation) {
+              _askConfirmation(r, originalArgs: _findCallArgs(r.toolCallId));
+            }
           }
         }
       },
+      options: _opts,
+    );
+  }
+
+  Map<String, dynamic> _findCallArgs(String toolCallId) {
+    // 倒序找最近一次 tool_call 的 args
+    for (var i = _items.length - 1; i >= 0; i--) {
+      final it = _items[i];
+      if (it.kind == _ItemKind.toolCall && it.toolCall?.id == toolCallId) {
+        return it.toolCall!.parsedArgs();
+      }
+    }
+    return const {};
+  }
+
+  Future<void> _askConfirmation(
+    ToolRunResult r, {
+    required Map<String, dynamic> originalArgs,
+  }) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      barrierColor: Colors.black54,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(BulterRadius.l),
+        ),
+        title: const Text('请确认操作'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Buler 想执行以下操作，是否允许？',
+              style: TextStyle(fontSize: BulterFontSize.body),
+            ),
+            const SizedBox(height: BulterSpacing.m),
+            Container(
+              padding: const EdgeInsets.all(BulterSpacing.m),
+              decoration: BoxDecoration(
+                color: BulterColors.canvas,
+                borderRadius: BorderRadius.circular(BulterRadius.m),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '工具：${r.toolName}',
+                    style: const TextStyle(
+                      fontSize: BulterFontSize.footnote,
+                      fontWeight: BulterFontWeight.semibold,
+                      color: BulterColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: BulterSpacing.s),
+                  Text(
+                    r.result.confirmationPrompt ?? r.result.summary,
+                    style: const TextStyle(
+                      fontSize: BulterFontSize.body,
+                      color: BulterColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: BulterColors.ctaText,
+              backgroundColor: BulterColors.cta,
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('确认执行'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return;
+    if (confirm == null) return;
+    setState(() => _sending = true);
+    final placeholder2 = _ChatItem.bubble(_Role.assistant, '');
+    placeholder2.streaming = true;
+    setState(() => _items.add(placeholder2));
+    String acc = '';
+    await AiService.instance.resumeAfterConfirmation(
+      memory: _memory,
+      toolCallId: r.toolCallId,
+      toolName: r.toolName,
+      originalArgs: originalArgs,
+      confirmed: confirm,
+      callback: (event) {
+        if (!mounted) return;
+        if (event.error != null) {
+          final msg = event.error is AiError
+              ? (event.error as AiError).message
+              : event.error.toString();
+          setState(() {
+            placeholder2.content = msg;
+            placeholder2.isError = true;
+            placeholder2.streaming = false;
+            _sending = false;
+          });
+          return;
+        }
+        if (event.delta.isNotEmpty) {
+          acc += event.delta;
+          setState(() => placeholder2.content = acc);
+          _scrollToBottom();
+        }
+        if (event.hasToolResults) {
+          setState(() {
+            for (final r in event.toolResults) {
+              _items.add(_ChatItem.toolResult(r));
+            }
+          });
+        }
+        if (event.done) {
+          setState(() {
+            placeholder2.streaming = false;
+            _sending = false;
+            if (acc.isEmpty && !placeholder2.isError) {
+              placeholder2.content = '（操作完成）';
+            }
+          });
+        }
+      },
+      options: _opts,
     );
   }
 
@@ -249,27 +390,60 @@ class _NoApiKeyBanner extends StatelessWidget {
 
 enum _Role { user, assistant }
 
+enum _ItemKind { bubble, toolCall, toolResult }
+
 // ignore: must_be_immutable
 class _ChatItem extends StatelessWidget {
-  final _Role role;
+  _Role role;
   String content;
   bool isError;
   bool streaming;
+  _ItemKind kind;
+  PendingToolCall? toolCall;
+  ToolRunResult? toolResult;
 
   _ChatItem.bubble(this.role, this.content)
     : isError = false,
-      streaming = false;
+      streaming = false,
+      kind = _ItemKind.bubble,
+      toolCall = null,
+      toolResult = null;
+
+  _ChatItem.toolCall(PendingToolCall c)
+    : role = _Role.assistant,
+      content = '',
+      isError = false,
+      streaming = false,
+      kind = _ItemKind.toolCall,
+      toolCall = c,
+      toolResult = null;
+
+  _ChatItem.toolResult(ToolRunResult r)
+    : role = _Role.assistant,
+      content = '',
+      isError = false,
+      streaming = false,
+      kind = _ItemKind.toolResult,
+      toolCall = null,
+      toolResult = r;
 
   @override
   Widget build(BuildContext context) {
-    if (role == _Role.assistant) {
-      return _AssistantBubble(
-        content: content,
-        streaming: streaming,
-        isError: isError,
-      );
+    switch (kind) {
+      case _ItemKind.bubble:
+        if (role == _Role.assistant) {
+          return _AssistantBubble(
+            content: content,
+            streaming: streaming,
+            isError: isError,
+          );
+        }
+        return _UserBubble(content: content);
+      case _ItemKind.toolCall:
+        return _ToolCallCard(call: toolCall!);
+      case _ItemKind.toolResult:
+        return _ToolResultCard(result: toolResult!);
     }
-    return _UserBubble(content: content);
   }
 }
 
@@ -372,6 +546,116 @@ class _AssistantBubble extends StatelessWidget {
                   fontSize: BulterFontSize.body,
                   height: 1.45,
                 ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ToolCallCard extends StatelessWidget {
+  final PendingToolCall call;
+  const _ToolCallCard({required this.call});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: BulterSpacing.s),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: BulterSpacing.m,
+                vertical: BulterSpacing.s,
+              ),
+              decoration: BoxDecoration(
+                color: BulterColors.canvas,
+                borderRadius: BorderRadius.circular(BulterRadius.m),
+                border: Border.all(color: BulterColors.divider, width: 0.5),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SvgIcon(
+                    'common/tune.svg',
+                    size: 14,
+                    color: BulterColors.textSecondary,
+                  ),
+                  const SizedBox(width: BulterSpacing.s),
+                  Text(
+                    '调用 ${call.name}',
+                    style: const TextStyle(
+                      fontSize: BulterFontSize.footnote,
+                      color: BulterColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ToolResultCard extends StatelessWidget {
+  final ToolRunResult result;
+  const _ToolResultCard({required this.result});
+
+  @override
+  Widget build(BuildContext context) {
+    final r = result.result;
+    final isErr = r.status == 'error';
+    final needsConfirm = r.needsConfirmation;
+    final iconName = isErr
+        ? 'common/error.svg'
+        : needsConfirm
+        ? 'common/info.svg'
+        : 'common/check.svg';
+    final color = isErr
+        ? BulterColors.error
+        : needsConfirm
+        ? BulterColors.wealth
+        : BulterColors.success;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: BulterSpacing.s),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: [
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: BulterSpacing.m,
+                vertical: BulterSpacing.s,
+              ),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(BulterRadius.m),
+                border: Border.all(
+                  color: color.withValues(alpha: 0.4),
+                  width: 0.5,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SvgIcon(iconName, size: 14, color: color),
+                  const SizedBox(width: BulterSpacing.s),
+                  Flexible(
+                    child: Text(
+                      r.summary,
+                      style: TextStyle(
+                        fontSize: BulterFontSize.footnote,
+                        color: BulterColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

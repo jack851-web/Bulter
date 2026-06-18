@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../bulter_module.dart';
+import '../../ai/tools/thought_tools.dart';
 import '../../features/thought/thought_home_page.dart';
 import '../../theme/tokens.dart';
 import 'db/thought_daos.dart';
@@ -63,7 +64,14 @@ class ThoughtModule implements BulterModule {
   );
 
   @override
-  List<ToolDefinition> get tools => const [];
+  List<ToolDefinition> get tools => const [
+    ThoughtTools.queryThoughtsDef,
+    ThoughtTools.queryLettersDef,
+    ThoughtTools.saveThoughtDef,
+    ThoughtTools.saveLetterDef,
+    ThoughtTools.deleteThoughtDef,
+    ThoughtTools.deleteLetterDef,
+  ];
 
   @override
   BriefingGenerator? get briefingGenerator => null;

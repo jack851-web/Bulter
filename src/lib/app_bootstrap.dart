@@ -1,5 +1,7 @@
+import 'ai/ai_service.dart';
 import 'ai/model_registry.dart';
 import 'ai/sub_agents/sub_agent_registry.dart';
+import 'ai/tools/bulter_tools_bootstrap.dart';
 import 'ai/tools/tool_registry.dart';
 import 'db/app_database.dart';
 import 'db/backup.dart';
@@ -52,10 +54,19 @@ Future<void> bootstrapApp({String? subdir}) async {
     ..clear()
     ..registerFromModules(registry.all, includeWrite: true);
 
+  // 把模块声明的工具替换为含执行器的实现（通过 BulterToolsBootstrap）
+  // 这一步**不**重置已注册的 schema-only 工具定义；它仅补齐 executor。
+  BulterToolsBootstrap.registerAll(ToolRegistry.instance, AppDatabase.I);
+
   // 子 Agent 注册表：每个子模型独立 ToolRegistry，物理隔离写工具
   SubAgentRegistry.instance
     ..clear()
     ..syncFromModuleRegistry();
+
+  // 同样为每个子 Agent 的隔离注册表补齐 executor
+  for (final entry in SubAgentRegistry.instance.allToolRegistries.entries) {
+    BulterToolsBootstrap.registerAll(entry.value, AppDatabase.I);
+  }
 }
 
 /// 数据库迁移入口。
@@ -81,4 +92,6 @@ Future<void> _migrateDatabase({String? subdir}) async {
   AppDatabase.I = AppDatabase(subdir: subdir);
   // 清理 7 天前的旧备份
   await BackupService.cleanExpired(subdir: subdir);
+  // 把 DB 绑给 AiService（用于 delete_* 二次确认）
+  AiService.bindDatabase(AppDatabase.I);
 }

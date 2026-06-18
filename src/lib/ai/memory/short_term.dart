@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 /// 单条消息在短记忆中的角色。
 enum ChatRole { system, user, assistant, tool }
 
@@ -75,11 +77,43 @@ class ShortTermMemory {
     }
   }
 
-  /// 转为 LLM 需要的 messages 字段（role / content 形式）。
-  List<Map<String, String>> toLlmMessages() {
-    return _messages
-        .map((m) => {'role': m.wireRole, 'content': m.content})
-        .toList(growable: false);
+  /// 转为 LLM 需要的 messages 字段（OpenAI Chat Completions 格式）。
+  ///
+  /// - system / user: `{role, content}`
+  /// - assistant (含 tool_calls 编码): `{role, content, [tool_calls]}`
+  /// - tool: `{role: tool, tool_call_id, content}`
+  List<Map<String, dynamic>> toLlmMessages() {
+    final out = <Map<String, dynamic>>[];
+    for (final m in _messages) {
+      if (m.role == ChatRole.system || m.role == ChatRole.user) {
+        out.add({'role': m.wireRole, 'content': m.content});
+      } else if (m.role == ChatRole.assistant) {
+        // 检查是否含 [tool_calls] 编码
+        final idx = m.content.indexOf('[tool_calls]');
+        if (idx >= 0) {
+          final contentPart = m.content.substring(0, idx).trimRight();
+          final jsonPart = m.content.substring(idx + '[tool_calls]'.length);
+          out.add({
+            'role': 'assistant',
+            if (contentPart.isNotEmpty) 'content': contentPart,
+            'tool_calls': (jsonDecode(jsonPart) as List).cast<dynamic>(),
+          });
+        } else {
+          out.add({'role': 'assistant', 'content': m.content});
+        }
+      } else if (m.role == ChatRole.tool) {
+        // 编码格式: <toolCallId>|<json>
+        final pipeIdx = m.content.indexOf('|');
+        if (pipeIdx > 0) {
+          final id = m.content.substring(0, pipeIdx);
+          final body = m.content.substring(pipeIdx + 1);
+          out.add({'role': 'tool', 'tool_call_id': id, 'content': body});
+        } else {
+          out.add({'role': 'tool', 'content': m.content});
+        }
+      }
+    }
+    return out;
   }
 
   /// 估算当前 token 数（粗略：每 4 个字符 ≈ 1 token；仅做 UI 提示用）。

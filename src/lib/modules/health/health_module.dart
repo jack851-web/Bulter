@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../bulter_module.dart';
+import '../../ai/tools/health_tools.dart';
 import '../../features/health/health_home_page.dart';
 import '../../theme/tokens.dart';
 import 'db/health_daos.dart';
@@ -63,7 +64,12 @@ class HealthModule implements BulterModule {
   );
 
   @override
-  List<ToolDefinition> get tools => const [];
+  List<ToolDefinition> get tools => const [
+    HealthTools.queryRecordsDef,
+    HealthTools.queryReportsDef,
+    HealthTools.saveRecordDef,
+    HealthTools.deleteRecordDef,
+  ];
 
   @override
   BriefingGenerator? get briefingGenerator => null;

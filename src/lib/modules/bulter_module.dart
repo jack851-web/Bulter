@@ -23,16 +23,50 @@ class SpecialistAgent {
   const SpecialistAgent({required this.moduleId, required this.name});
 }
 
-/// 工具定义（占位，Step 5 实现 JSON Schema 与执行器）
+/// 工具分类。
+enum ToolCategory { read, write, confirmation, system }
+
+/// 工具定义（Step 5 完整版：name / description / JSON Schema / category）。
 class ToolDefinition {
+  /// OpenAI Function Calling 的工具名（同一注册表内唯一，snake_case）
   final String name;
+
+  /// 工具中文 + 英文描述，给 LLM 看
   final String description;
-  const ToolDefinition({required this.name, required this.description});
+
+  /// 工具分类
+  final ToolCategory category;
+
+  /// JSON Schema 描述参数列表。
+  /// 格式与 OpenAI Chat Completions `tools[i].function.parameters` 完全一致：
+  /// ```json
+  /// {
+  ///   "type": "object",
+  ///   "properties": {
+  ///     "name": {"type": "string", "description": "..."}
+  ///   },
+  ///   "required": ["name"]
+  /// }
+  /// ```
+  final Map<String, dynamic> parameters;
+
+  const ToolDefinition({
+    required this.name,
+    required this.description,
+    required this.category,
+    this.parameters = const {
+      'type': 'object',
+      'properties': <String, dynamic>{},
+    },
+  });
 }
 
-/// 工具执行器（占位）
-typedef ToolExecutor =
-    Future<Map<String, dynamic>> Function(Map<String, dynamic> params);
+/// 工具执行器：返回 [ToolResult]（定义在 `ai/tools/tool_registry.dart`）。
+///
+/// 为了避免模块间循环 import，本 typedef 的返回类型用动态化的 `Map`；
+/// 实际注册时的真实签名是 `Future<ToolResult> Function(Map<String, dynamic>)`，
+/// 在 `tool_registry.dart` 的 [ToolRegistry.register] 处做协变检查。
+typedef ToolExecutor = Future<dynamic> Function(Map<String, dynamic> params);
 
 /// 简报生成器（占位；Step 9 实现）
 typedef BriefingGenerator = Future<String> Function();

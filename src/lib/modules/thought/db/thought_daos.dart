@@ -41,6 +41,8 @@ class ThoughtDao extends DatabaseAccessor<AppDatabase> with _$ThoughtDaoMixin {
       (update(letters)..where((l) => l.id.equals(id)))
           .write(LettersCompanion(openedAt: Value(DateTime.now())))
           .then((_) => id);
+  Future<int> deleteLetter(int id) =>
+      (delete(letters)..where((l) => l.id.equals(id))).go();
 
   Future<List<AnnualReview>> allReviews() => select(annualReviews).get();
   Future<int> upsertAnnualReview(AnnualReviewsCompanion r) async {

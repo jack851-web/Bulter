@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../bulter_module.dart';
+import '../../ai/tools/relationship_tools.dart';
 import '../../features/relationship/relationship_home_page.dart';
 import '../../theme/tokens.dart';
 import 'db/relationship_daos.dart';
@@ -63,7 +64,17 @@ class RelationshipModule implements BulterModule {
   );
 
   @override
-  List<ToolDefinition> get tools => const [];
+  List<ToolDefinition> get tools => const [
+    RelationshipTools.queryContactsDef,
+    RelationshipTools.queryInteractionsDef,
+    RelationshipTools.queryFavorsDef,
+    RelationshipTools.saveContactDef,
+    RelationshipTools.saveInteractionDef,
+    RelationshipTools.saveFavorDef,
+    RelationshipTools.deleteContactDef,
+    RelationshipTools.deleteInteractionDef,
+    RelationshipTools.deleteFavorDef,
+  ];
 
   @override
   BriefingGenerator? get briefingGenerator => null;
