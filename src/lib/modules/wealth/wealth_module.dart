@@ -35,10 +35,10 @@ class WealthModule implements BulterModule {
   List<ModuleTab> get tabs => const [];
 
   @override
-  SpecialistAgent? get subAgent => const SpecialistAgent(
-    moduleId: ModuleId.wealth,
-    name: 'Wealth Specialist',
-  );
+  bool get hasSubAgent => true;
+
+  @override
+  SpecialistAgent? get subAgent => null;
 
   @override
   List<ToolDefinition> get tools => const [

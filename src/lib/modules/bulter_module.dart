@@ -1,6 +1,11 @@
+import 'dart:async' show TimeoutException;
+
 import 'package:drift/drift.dart';
 import 'package:flutter/material.dart' hide Table;
 
+import '../ai/ai_service.dart';
+import '../ai/memory/short_term.dart';
+import '../ai/tools/tool_registry.dart';
 import '../theme/tokens.dart';
 
 /// 模块 ID。约定全小写，URL / 事件 / Hive Box 命名都用这个。
@@ -16,11 +21,172 @@ class ModuleId {
   static const String demo = 'demo';
 }
 
-/// 子 Agent 标识（占位；后续步骤填充实际调用）
+/// 子 Agent（Specialist Agent）— Step 8 起成为可调用实例。
+///
+/// 注册时由 [SubAgentRegistry] 注入隔离的 [ToolRegistry]（仅含只读工具 + RAG）
+/// + 主模型共用的 [AiService]，构造时即**物理隔离写权限**：子 Agent 的
+/// ToolRegistry 在 [SubAgentRegistry.register] 里走 `includeWrite: false`，
+/// 因此 SpecialistAgent 拿不到任何 write/confirmation 工具，从根上断绝越权。
+///
+/// 调用语义（[invoke]）：
+/// 1. 拼一个简短的 system prompt："你是 Bulter 的 X 模块子助手，只能读 X 模块数据…"
+/// 2. 走标准 [AiService.streamCompletion] + 隔离 ToolRegistry → 子 Agent 自由调用本模块只读工具
+/// 3. 8s 超时；失败 / 越权 / 超时统一返回降级文案（不让主模型幻觉越权）
 class SpecialistAgent {
   final String moduleId;
   final String name;
-  const SpecialistAgent({required this.moduleId, required this.name});
+  final String systemPrompt;
+  final ToolRegistry toolRegistry;
+  final AiService aiService;
+  final Duration defaultTimeout;
+
+  SpecialistAgent({
+    required this.moduleId,
+    required this.name,
+    required this.systemPrompt,
+    required this.toolRegistry,
+    required this.aiService,
+    this.defaultTimeout = const Duration(seconds: 8),
+  });
+
+  /// 拉起一次子模型调用（短上下文 + 隔离 ToolRegistry + RAG 自动注入）。
+  ///
+  /// 返回 [SubAgentResult]，**始终成功**（即使 LLM 失败 / 超时也返回降级文案），
+  /// 主模型拿到结果后可继续拼装跨模块叙事。
+  Future<SubAgentResult> invoke(
+    String query, {
+    Duration? timeout,
+    void Function(String toolName)? onToolCall,
+  }) async {
+    final limit = timeout ?? defaultTimeout;
+    final stopwatch = Stopwatch()..start();
+    final toolsUsed = <String>[];
+    final memory = ShortTermMemory(maxRounds: 12)
+      ..addSystem(systemPrompt)
+      ..append(
+        ChatMessage(
+          role: ChatRole.user,
+          content: query,
+          createdAt: DateTime.now(),
+        ),
+      );
+
+    final captured = StringBuffer();
+    final errors = <String>[];
+
+    final chatOptions = ChatOptions(
+      reactLoop: true,
+      maxReactRounds: 4,
+      toolRegistry: toolRegistry,
+    );
+
+    try {
+      await aiService
+          .streamCompletion(
+            memory: memory,
+            callback: (event) {
+              if (event.error != null) {
+                final msg = event.error is AiError
+                    ? (event.error as AiError).message
+                    : event.error.toString();
+                errors.add(msg);
+                return;
+              }
+              if (event.hasToolCalls) {
+                for (final c in event.toolCalls) {
+                  toolsUsed.add(c.name);
+                  onToolCall?.call(c.name);
+                }
+              }
+              if (event.delta.isNotEmpty) {
+                captured.write(event.delta);
+              }
+            },
+            options: chatOptions,
+          )
+          .timeout(limit);
+
+      final text = captured.toString().trim();
+      stopwatch.stop();
+      if (text.isEmpty) {
+        return SubAgentResult(
+          moduleId: moduleId,
+          moduleName: name,
+          ok: false,
+          text: '（$name 子模型未返回内容）',
+          toolsUsed: toolsUsed,
+          elapsed: stopwatch.elapsed,
+          error: errors.isEmpty ? null : errors.join('；'),
+        );
+      }
+      return SubAgentResult(
+        moduleId: moduleId,
+        moduleName: name,
+        ok: true,
+        text: text,
+        toolsUsed: toolsUsed,
+        elapsed: stopwatch.elapsed,
+      );
+    } on TimeoutException {
+      stopwatch.stop();
+      return SubAgentResult(
+        moduleId: moduleId,
+        moduleName: name,
+        ok: false,
+        text: '（$name 子模型调用超时，已降级。该模块暂时不可用）',
+        toolsUsed: toolsUsed,
+        elapsed: stopwatch.elapsed,
+        error: 'timeout ${limit.inMilliseconds}ms',
+      );
+    } catch (e) {
+      stopwatch.stop();
+      return SubAgentResult(
+        moduleId: moduleId,
+        moduleName: name,
+        ok: false,
+        text: '（$name 子模型调用失败：${e.toString().split('\n').first}）',
+        toolsUsed: toolsUsed,
+        elapsed: stopwatch.elapsed,
+        error: e.toString(),
+      );
+    }
+  }
+}
+
+/// 子 Agent 一次调用的结构化结果。
+///
+/// 主模型在 `invoke_sub_agent` 工具里收到 `text`（自然语言），直接转给 LLM 拼装
+/// 跨模块叙事；同时 `toolsUsed` / `elapsed` / `error` 给对话页用于渲染调度链路卡。
+class SubAgentResult {
+  final String moduleId;
+  final String moduleName;
+  final bool ok;
+  final String text;
+  final List<String> toolsUsed;
+  final Duration elapsed;
+  final String? error;
+
+  const SubAgentResult({
+    required this.moduleId,
+    required this.moduleName,
+    required this.ok,
+    required this.text,
+    required this.toolsUsed,
+    required this.elapsed,
+    this.error,
+  });
+
+  /// 给 LLM 看的简洁表达（不包含 elapsed / toolsUsed 等元信息）。
+  String toLlmContext() => '[$moduleName] $text';
+
+  /// 给 UI 看的调度链路卡文本。
+  String toUiCard() {
+    if (ok) {
+      final tools = toolsUsed.isEmpty ? '' : '（用了 ${toolsUsed.join(' / ')}）';
+      return '$moduleName · ${elapsed.inMilliseconds}ms$tools';
+    }
+    return '$moduleName · 失败 · ${error ?? "未知"}';
+  }
 }
 
 /// 工具分类。
@@ -99,8 +265,17 @@ abstract class BulterModule {
   /// 返回空列表则不显示底部 Tab。
   List<ModuleTab> get tabs;
 
-  /// 该模块需要注册的子 Agent
+  /// 该模块需要注册的子 Agent（默认 null；中枢 / Demo 模块无子 Agent）。
+  /// 5 个业务模块 **不直接 override 此 getter** — 改为 override [hasSubAgent]
+  /// 让 [SubAgentRegistry] 在启动时构造真实可调用的 [SpecialistAgent] 实例。
   SpecialistAgent? get subAgent;
+
+  /// 是否声明拥有子 Agent（Step 8 引入）。
+  ///
+  /// 5 个业务模块 override 为 `true`，[SubAgentRegistry] 会在启动时根据
+  /// `module.id` + `module.displayName` + 模块 tools 构造真实可调用的
+  /// [SpecialistAgent] 实例。中枢 / Demo 模块 override 为 `false`，不会被注册。
+  bool get hasSubAgent;
 
   /// 该模块提供的只读/写工具 id 列表（供 ToolRegistry 注册）
   List<ToolDefinition> get tools;

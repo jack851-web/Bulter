@@ -35,10 +35,10 @@ class ThoughtModule implements BulterModule {
   List<ModuleTab> get tabs => const [];
 
   @override
-  SpecialistAgent? get subAgent => const SpecialistAgent(
-    moduleId: ModuleId.thought,
-    name: 'Thought Specialist',
-  );
+  bool get hasSubAgent => true;
+
+  @override
+  SpecialistAgent? get subAgent => null;
 
   @override
   List<ToolDefinition> get tools => const [

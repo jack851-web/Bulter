@@ -60,6 +60,9 @@ class DemoModule implements BulterModule {
   ];
 
   @override
+  bool get hasSubAgent => false;
+
+  @override
   SpecialistAgent? get subAgent => null;
 
   @override

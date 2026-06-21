@@ -204,6 +204,8 @@ class _MissingModule implements BulterModule {
   @override
   List<ModuleTab> get tabs => const [];
   @override
+  bool get hasSubAgent => false;
+  @override
   SpecialistAgent? get subAgent => null;
   @override
   List<ToolDefinition> get tools => const [];

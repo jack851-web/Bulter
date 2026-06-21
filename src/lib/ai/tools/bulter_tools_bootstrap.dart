@@ -4,6 +4,7 @@ import '../../db/app_database.dart';
 import '../../modules/bulter_module.dart';
 import 'growth_tools.dart';
 import 'health_tools.dart';
+import 'invoke_sub_agent_tool.dart';
 import 'relationship_tools.dart';
 import 'thought_tools.dart';
 import 'tool_registry.dart';
@@ -16,13 +17,15 @@ import 'wealth_tools.dart';
 class BulterToolsBootstrap {
   BulterToolsBootstrap._();
 
-  /// 注册所有业务模块的全部工具（含写）。
+  /// 注册所有业务模块的全部工具（含写）+ 跨模块调度工具 `invoke_sub_agent`。
   static void registerAll(ToolRegistry registry, AppDatabase db) {
     RelationshipTools.registerAll(registry, db);
     WealthTools.registerAll(registry, db);
     ThoughtTools.registerAll(registry, db);
     HealthTools.registerAll(registry, db);
     GrowthTools.registerAll(registry, db);
+    // Step 8：跨模块调度工具（主模型专用）
+    InvokeSubAgentTool.registerAll(registry);
     debugPrint('BulterToolsBootstrap: 已注册 ${registry.getTools().length} 个工具');
   }
 

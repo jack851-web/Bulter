@@ -899,6 +899,11 @@ class _ToolResultCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final r = result.result;
+    // Step 8：invoke_sub_agent 工具的特殊卡片（显示子 Agent 标识 + 耗时 + 工具）
+    if (result.toolName == 'invoke_sub_agent') {
+      return _SubAgentResultCard(result: result);
+    }
+
     final isErr = r.status == 'error';
     final needsConfirm = r.needsConfirmation;
     final iconName = isErr
@@ -949,6 +954,133 @@ class _ToolResultCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// `invoke_sub_agent` 工具结果专用卡：粉色边 + 调度链路头部。
+///
+/// 显示：模块名（displayName）+ 状态徽标 + 子 Agent 返回的简短摘要 + 耗时 + 调用过的工具。
+class _SubAgentResultCard extends StatelessWidget {
+  final ToolRunResult result;
+  const _SubAgentResultCard({required this.result});
+
+  @override
+  Widget build(BuildContext context) {
+    final r = result.result;
+    final data = r.data;
+    final ok = data['ok'] == true;
+    final moduleName = (data['module_name'] as String?) ?? '子模型';
+    final elapsedMs = (data['elapsed_ms'] as int?) ?? 0;
+    final toolsList =
+        (data['tools_used'] as List?)?.cast<String>() ?? const <String>[];
+    final color = ok ? BulterColors.relationship : BulterColors.warning;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: BulterSpacing.s),
+      child: Container(
+        padding: const EdgeInsets.all(BulterSpacing.m),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(BulterRadius.m),
+          border: Border.all(color: color.withValues(alpha: 0.35), width: 0.6),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: BulterSpacing.s + 2,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(BulterRadius.pill),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SvgIcon(
+                        'common/users.svg',
+                        size: 12,
+                        color: BulterColors.ctaText,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        moduleName,
+                        style: const TextStyle(
+                          fontSize: BulterFontSize.caption,
+                          color: BulterColors.ctaText,
+                          fontWeight: BulterFontWeight.bold,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: BulterSpacing.s),
+                Text(
+                  ok ? '调度成功' : '降级',
+                  style: TextStyle(
+                    fontSize: BulterFontSize.caption,
+                    color: color,
+                    fontWeight: BulterFontWeight.semibold,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${elapsedMs}ms',
+                  style: const TextStyle(
+                    fontSize: BulterFontSize.caption,
+                    color: BulterColors.textTertiary,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: BulterSpacing.s),
+            Text(
+              r.summary,
+              maxLines: 4,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: BulterFontSize.footnote,
+                color: BulterColors.textPrimary,
+                height: 1.45,
+              ),
+            ),
+            if (toolsList.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 4,
+                runSpacing: 4,
+                children: [
+                  for (final t in toolsList)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: BulterColors.surfaceMuted,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        t,
+                        style: const TextStyle(
+                          fontSize: BulterFontSize.caption,
+                          color: BulterColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

@@ -32,6 +32,9 @@ class ButlerModule implements BulterModule {
   List<ModuleTab> get tabs => const [];
 
   @override
+  bool get hasSubAgent => false;
+
+  @override
   SpecialistAgent? get subAgent => null;
 
   @override
