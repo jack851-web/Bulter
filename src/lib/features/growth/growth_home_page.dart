@@ -37,7 +37,7 @@ class GrowthHomePage extends StatelessWidget {
     );
   }
 
-  static void _openAddGoal(BuildContext context) {
+  static void openAddGoal(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => GoalForm(
@@ -51,7 +51,7 @@ class GrowthHomePage extends StatelessWidget {
     );
   }
 
-  static void _openAddLearning(BuildContext context) {
+  static void openAddLearning(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => LearningForm(

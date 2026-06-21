@@ -48,7 +48,7 @@ class WealthHomePage extends StatelessWidget {
             ],
           ),
           floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => _openAddTransaction(context),
+            onPressed: () => openAddTransaction(context),
             backgroundColor: BulterColors.cta,
             foregroundColor: BulterColors.ctaText,
             elevation: 0,
@@ -60,7 +60,7 @@ class WealthHomePage extends StatelessWidget {
     );
   }
 
-  static void _openAddTransaction(BuildContext context) {
+  static void openAddTransaction(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => TransactionForm(
@@ -74,7 +74,7 @@ class WealthHomePage extends StatelessWidget {
     );
   }
 
-  static void _openAddAccount(BuildContext context) {
+  static void openAddAccount(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => AccountForm(
@@ -175,14 +175,14 @@ class _ActionRow extends StatelessWidget {
   void _openTransfer(BuildContext context, List<Account> accounts) {
     // 简化：跳到新增账户（后续 Step 4/5 接入"转账"工具）
     if (accounts.length < 2) {
-      WealthHomePage._openAddAccount(context);
+      WealthHomePage.openAddAccount(context);
       return;
     }
-    WealthHomePage._openAddTransaction(context);
+    WealthHomePage.openAddTransaction(context);
   }
 
   void _openTransaction(BuildContext context) {
-    WealthHomePage._openAddTransaction(context);
+    WealthHomePage.openAddTransaction(context);
   }
 }
 
@@ -315,7 +315,7 @@ class _AccountsList extends StatelessWidget {
                 Icons.chevron_right_rounded,
                 color: BulterColors.textTertiary,
               ),
-              onPressed: () => WealthHomePage._openAddAccount(context),
+              onPressed: () => WealthHomePage.openAddAccount(context),
             ),
           ],
         ),

@@ -66,6 +66,9 @@ class DemoModule implements BulterModule {
   SpecialistAgent? get subAgent => null;
 
   @override
+  void Function(BuildContext)? get quickAdd => null;
+
+  @override
   List<ToolDefinition> get tools => const [];
 
   @override

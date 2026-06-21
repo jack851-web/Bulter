@@ -296,6 +296,13 @@ abstract class BulterModule {
 
   /// 卸载时回调
   Future<void> onDispose();
+
+  /// 顶栏 + 按钮回调（**上下文感知的快速添加**）。
+  ///
+  /// 5 个业务模块应 override 为模块专属的"加 X"动作（关系 → 加联系人 等），
+  /// 让用户在任意位置一键进模块的快速添加。中枢 / Demo 模块返回 null，
+  /// AppShell 会降级弹全局 quick add 菜单。
+  void Function(BuildContext)? get quickAdd;
 }
 
 /// DAO 工厂：模块可按需提供 DAO 实例的构造方法（在数据库打开后调用）。

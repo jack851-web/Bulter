@@ -41,6 +41,9 @@ class ThoughtModule implements BulterModule {
   SpecialistAgent? get subAgent => null;
 
   @override
+  void Function(BuildContext)? get quickAdd => ThoughtHomePage.openAddThought;
+
+  @override
   List<ToolDefinition> get tools => const [
     ThoughtTools.queryThoughtsDef,
     ThoughtTools.queryLettersDef,

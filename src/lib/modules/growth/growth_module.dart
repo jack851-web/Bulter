@@ -40,6 +40,9 @@ class GrowthModule implements BulterModule {
   SpecialistAgent? get subAgent => null;
 
   @override
+  void Function(BuildContext)? get quickAdd => GrowthHomePage.openAddGoal;
+
+  @override
   List<ToolDefinition> get tools => const [];
 
   @override

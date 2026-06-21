@@ -41,6 +41,9 @@ class HealthModule implements BulterModule {
   SpecialistAgent? get subAgent => null;
 
   @override
+  void Function(BuildContext)? get quickAdd => HealthHomePage.openAddRecord;
+
+  @override
   List<ToolDefinition> get tools => const [
     HealthTools.queryRecordsDef,
     HealthTools.queryReportsDef,

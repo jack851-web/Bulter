@@ -37,7 +37,7 @@ class ThoughtHomePage extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openAddThought(context),
+        onPressed: () => openAddThought(context),
         backgroundColor: BulterColors.cta,
         foregroundColor: BulterColors.ctaText,
         elevation: 0,
@@ -47,7 +47,7 @@ class ThoughtHomePage extends StatelessWidget {
     );
   }
 
-  static void _openAddThought(BuildContext context) {
+  static void openAddThought(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => ThoughtForm(

@@ -41,6 +41,10 @@ class RelationshipModule implements BulterModule {
   SpecialistAgent? get subAgent => null;
 
   @override
+  void Function(BuildContext)? get quickAdd =>
+      RelationshipHomePage.openAddContact;
+
+  @override
   List<ToolDefinition> get tools => const [
     RelationshipTools.queryContactsDef,
     RelationshipTools.queryInteractionsDef,

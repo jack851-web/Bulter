@@ -7,7 +7,22 @@ import 'health_form.dart';
 
 /// 健康模块主页：Tab 切换「日常记录 / 体检报告」。
 class HealthHomePage extends StatelessWidget {
-  const HealthHomePage({super.key});
+  const HealthHomePage();
+
+  /// 顶栏快速添加按钮回调（公开给 AppShell 用）。
+  static void openAddRecord(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => HealthForm(
+          title: '新增健康记录',
+          onSubmit: (data) async {
+            await AppDatabase.I.healthDao.insertRecord(data);
+            if (context.mounted) Navigator.of(context).pop();
+          },
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,26 +72,12 @@ class _RecordsTab extends StatelessWidget {
         itemBuilder: (context, r, idx) => _RecordRow(record: r),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openAddRecord(context),
+        onPressed: () => HealthHomePage.openAddRecord(context),
         backgroundColor: BulterColors.cta,
         foregroundColor: BulterColors.ctaText,
         elevation: 0,
         icon: const Icon(Icons.add_rounded),
         label: const Text('记一笔'),
-      ),
-    );
-  }
-
-  static void _openAddRecord(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => HealthForm(
-          title: '新增健康记录',
-          onSubmit: (data) async {
-            await AppDatabase.I.healthDao.insertRecord(data);
-            if (context.mounted) Navigator.of(context).pop();
-          },
-        ),
       ),
     );
   }

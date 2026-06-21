@@ -41,6 +41,10 @@ class WealthModule implements BulterModule {
   SpecialistAgent? get subAgent => null;
 
   @override
+  void Function(BuildContext)? get quickAdd =>
+      WealthHomePage.openAddTransaction;
+
+  @override
   List<ToolDefinition> get tools => const [
     WealthTools.queryAccountsDef,
     WealthTools.queryTransactionsDef,
