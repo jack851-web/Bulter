@@ -1,9 +1,13 @@
+import 'dart:convert' show jsonDecode;
+
 import 'package:flutter/material.dart';
 
 import '../../ai/ai_service.dart';
+import '../../ai/memory/memory_manager.dart';
 import '../../ai/memory/short_term.dart';
 import '../../ai/model_registry.dart';
 import '../../components/svg_icon.dart';
+import '../../db/app_database.dart';
 import '../../theme/tokens.dart';
 
 /// AI 对话页（Step 5：流式 + ReAct 工具 + 二次确认）。
@@ -20,6 +24,11 @@ class _ChatPageState extends State<ChatPage> {
   final _memory = ShortTermMemory(maxRounds: 20);
   final List<_ChatItem> _items = [];
   bool _sending = false;
+  int _ragInjectedCount = 0;
+  MemoryInjectionReport? _lastInjection;
+  MemoryUpdateResult? _lastMemoryUpdate;
+  int _profileFieldCount = 0;
+  String _profileName = '';
 
   @override
   void initState() {
@@ -30,6 +39,45 @@ class _ChatPageState extends State<ChatPage> {
         '下午好，我是 Buler。\n你已经 3 天没记账了，需要我帮你回忆一下吗？',
       ),
     );
+    _loadProfileStatus();
+  }
+
+  Future<void> _loadProfileStatus() async {
+    final memory = AiService.rag?.memory;
+    if (memory == null) return;
+    try {
+      final p = await memory.userProfile.current();
+      if (!mounted) return;
+      setState(() {
+        _profileName = (p.displayName?.isNotEmpty ?? false)
+            ? p.displayName!
+            : '';
+        _profileFieldCount = _countProfileFields(p);
+      });
+    } catch (_) {}
+  }
+
+  /// 统计画像中已填写的字段数（4 个标量 + 3 个 JSON 列表）。
+  int _countProfileFields(UserProfile p) {
+    var n = 0;
+    if ((p.displayName ?? '').isNotEmpty) n++;
+    if ((p.occupation ?? '').isNotEmpty) n++;
+    if ((p.location ?? '').isNotEmpty) n++;
+    if (p.birthday != null) n++;
+    if (_decodeListLen(p.preferencesJson) > 0) n++;
+    if (_decodeListLen(p.goalsJson) > 0) n++;
+    if (_decodeListLen(p.importantPeopleJson) > 0) n++;
+    return n;
+  }
+
+  int _decodeListLen(String json) {
+    if (json.isEmpty || json == '[]' || json == '{}') return 0;
+    try {
+      final v = jsonDecode(json);
+      if (v is List) return v.length;
+      if (v is Map) return v.length;
+    } catch (_) {}
+    return 0;
   }
 
   @override
@@ -60,6 +108,9 @@ class _ChatPageState extends State<ChatPage> {
       ),
     );
 
+    // 触发后台抽取（不阻塞主流程）
+    _maybeExtractMemories();
+
     final placeholder = _ChatItem.bubble(_Role.assistant, '');
     placeholder.streaming = true;
     setState(() => _items.add(placeholder));
@@ -80,6 +131,18 @@ class _ChatPageState extends State<ChatPage> {
             _sending = false;
           });
           return;
+        }
+        if (event.ragInjectedCount > 0) {
+          setState(() {
+            _ragInjectedCount = event.ragInjectedCount;
+            _lastInjection = MemoryInjectionReport(
+              profileFields: _profileFieldCount,
+              ragHits: event.ragInjectedCount,
+              hasWorkingTask:
+                  AiService.rag?.memory?.working.hasActiveTask ?? false,
+              shortTermRounds: _memory.rounds,
+            );
+          });
         }
         if (event.delta.isNotEmpty) {
           accumulated += event.delta;
@@ -266,6 +329,26 @@ class _ChatPageState extends State<ChatPage> {
     });
   }
 
+  /// 后台触发长记忆 / 用户画像抽取。
+  void _maybeExtractMemories() {
+    final memory = AiService.rag?.memory;
+    if (memory == null) return;
+    // 异步执行，不 await
+    () async {
+      try {
+        final r = await memory.onUserMessage(_memory);
+        if (!mounted) return;
+        if (r.hasChanges) {
+          setState(() => _lastMemoryUpdate = r);
+          // 重新探测画像可用状态
+          if (r.profileUpdated > 0) {
+            _loadProfileStatus();
+          }
+        }
+      } catch (_) {}
+    }();
+  }
+
   void _openModelConfig() {
     Navigator.of(context).pushNamed('/settings/model');
   }
@@ -277,8 +360,18 @@ class _ChatPageState extends State<ChatPage> {
       children: [
         _StatusBar(
           trackedCount: _items.where((i) => i.role == _Role.user).length,
+          ragInjectedCount: _ragInjectedCount,
           onConfigure: _openModelConfig,
         ),
+        if (_lastInjection != null ||
+            _profileFieldCount > 0 ||
+            _lastMemoryUpdate != null)
+          _MemoryPanel(
+            report: _lastInjection,
+            updatedCount: _lastMemoryUpdate,
+            profileFieldCount: _profileFieldCount,
+            profileName: _profileName,
+          ),
         Expanded(
           child: _items.isEmpty
               ? const _EmptyChat()
@@ -338,6 +431,202 @@ class _EmptyChat extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// 记忆注入区（Step 7）：可折叠展示本次 LLM 调用注入了哪些记忆。
+class _MemoryPanel extends StatefulWidget {
+  final MemoryInjectionReport? report;
+  final MemoryUpdateResult? updatedCount;
+  final int profileFieldCount;
+  final String profileName;
+  const _MemoryPanel({
+    required this.report,
+    required this.updatedCount,
+    required this.profileFieldCount,
+    required this.profileName,
+  });
+
+  @override
+  State<_MemoryPanel> createState() => _MemoryPanelState();
+}
+
+class _MemoryPanelState extends State<_MemoryPanel> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    // 没任何信息时整条不显示
+    if (widget.report == null &&
+        widget.updatedCount == null &&
+        widget.profileFieldCount == 0) {
+      return const SizedBox.shrink();
+    }
+    final r = widget.report;
+    final u = widget.updatedCount;
+    final rag = r?.ragHits ?? 0;
+    final rounds = r?.shortTermRounds ?? 0;
+    final hasWorking = r?.hasWorkingTask ?? false;
+    final fields = widget.profileFieldCount;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: BulterSpacing.l,
+        vertical: BulterSpacing.xs,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          InkWell(
+            onTap: () => setState(() => _expanded = !_expanded),
+            borderRadius: BorderRadius.circular(BulterRadius.s),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  SvgIcon(
+                    'common/sparkles.svg',
+                    size: 12,
+                    color: BulterColors.textTertiary,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      _summary(rag, rounds, hasWorking, u),
+                      style: const TextStyle(
+                        fontSize: BulterFontSize.footnote,
+                        color: BulterColors.textTertiary,
+                      ),
+                    ),
+                  ),
+                  AnimatedRotation(
+                    turns: _expanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 150),
+                    child: const SvgIcon(
+                      'common/expand-more.svg',
+                      size: 14,
+                      color: BulterColors.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_expanded)
+            _MemoryPanelDetail(
+              rag: rag,
+              rounds: rounds,
+              hasWorking: hasWorking,
+              profileFieldCount: fields,
+              profileName: widget.profileName,
+              update: u,
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _summary(int rag, int rounds, bool hasWorking, MemoryUpdateResult? u) {
+    final parts = <String>[];
+    final fields = widget.profileFieldCount;
+    if (fields > 0) {
+      parts.add('画像 $fields 字段');
+    }
+    if (rag > 0) {
+      parts.add('RAG $rag 条');
+    } else {
+      parts.add('RAG 0');
+    }
+    if (hasWorking) parts.add('工作记忆');
+    parts.add('短记忆 $rounds 轮');
+    if (u != null && u.hasChanges) {
+      parts.add('+${u.longTermAdded} 新记忆');
+    }
+    return parts.join(' · ');
+  }
+}
+
+class _MemoryPanelDetail extends StatelessWidget {
+  final int rag;
+  final int rounds;
+  final bool hasWorking;
+  final int profileFieldCount;
+  final String profileName;
+  final MemoryUpdateResult? update;
+  const _MemoryPanelDetail({
+    required this.rag,
+    required this.rounds,
+    required this.hasWorking,
+    required this.profileFieldCount,
+    required this.profileName,
+    required this.update,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final profileLabel = profileFieldCount == 0
+        ? '未设置'
+        : (profileName.isNotEmpty
+              ? '$profileName · $profileFieldCount 字段'
+              : '$profileFieldCount 字段');
+    return Container(
+      margin: const EdgeInsets.only(top: 4, bottom: 4),
+      padding: const EdgeInsets.all(BulterSpacing.s),
+      decoration: BoxDecoration(
+        color: BulterColors.surface,
+        borderRadius: BorderRadius.circular(BulterRadius.s),
+        border: Border.all(color: BulterColors.divider, width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _row('common/user.svg', '用户画像', profileLabel),
+          _row('common/sparkles.svg', 'RAG 召回', '$rag 条相关记忆'),
+          if (hasWorking) _row('common/circle.svg', '工作记忆', '有活跃任务'),
+          _row('chat/chat-bubble-outline.svg', '短记忆', '$rounds 轮'),
+          if (update != null && update!.hasChanges) ...[
+            const SizedBox(height: 4),
+            const Divider(height: 0.5, color: BulterColors.divider),
+            const SizedBox(height: 4),
+            _row(
+              'common/plus.svg',
+              '本次新记忆',
+              '+${update!.longTermAdded} 添加 / ${update!.longTermDeduped} 重复',
+            ),
+            if (update!.profileUpdated > 0)
+              _row('common/user.svg', '画像更新', '${update!.profileUpdated} 个字段'),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _row(String icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          SvgIcon(icon, size: 12, color: BulterColors.textTertiary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: BulterFontSize.footnote,
+              color: BulterColors.textSecondary,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: BulterFontSize.footnote,
+              color: BulterColors.textPrimary,
+              fontWeight: BulterFontWeight.semibold,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -735,8 +1024,13 @@ class _TypingDotsState extends State<_TypingDots>
 
 class _StatusBar extends StatelessWidget {
   final int trackedCount;
+  final int ragInjectedCount;
   final VoidCallback onConfigure;
-  const _StatusBar({required this.trackedCount, required this.onConfigure});
+  const _StatusBar({
+    required this.trackedCount,
+    required this.ragInjectedCount,
+    required this.onConfigure,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -759,17 +1053,44 @@ class _StatusBar extends StatelessWidget {
           ),
           const SizedBox(width: BulterSpacing.s),
           Expanded(
-            child: Text(
-              hasKey ? '在线 · $trackedCount 件事已被追踪' : '未配置 API Key · 点击设置',
-              style: TextStyle(
-                fontSize: BulterFontSize.footnote,
-                color: hasKey
-                    ? BulterColors.textSecondary
-                    : BulterColors.wealth,
-                fontWeight: hasKey
-                    ? BulterFontWeight.regular
-                    : BulterFontWeight.semibold,
-              ),
+            child: Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    hasKey ? '在线 · $trackedCount 件事已被追踪' : '未配置 API Key · 点击设置',
+                    style: TextStyle(
+                      fontSize: BulterFontSize.footnote,
+                      color: hasKey
+                          ? BulterColors.textSecondary
+                          : BulterColors.wealth,
+                      fontWeight: hasKey
+                          ? BulterFontWeight.regular
+                          : BulterFontWeight.semibold,
+                    ),
+                  ),
+                ),
+                if (ragInjectedCount > 0) ...[
+                  const SizedBox(width: BulterSpacing.s),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: BulterColors.growth.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'RAG +$ragInjectedCount',
+                      style: const TextStyle(
+                        fontSize: BulterFontSize.footnote,
+                        color: BulterColors.growth,
+                        fontWeight: BulterFontWeight.semibold,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
           Material(
