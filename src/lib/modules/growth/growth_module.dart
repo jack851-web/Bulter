@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../bulter_module.dart';
-import '../../ai/tools/growth_tools.dart';
 import '../../features/growth/growth_home_page.dart';
 import '../../theme/tokens.dart';
 import 'db/growth_daos.dart';
@@ -29,33 +28,10 @@ class GrowthModule implements BulterModule {
   @override
   Widget buildHomePage(BuildContext context) => const GrowthHomePage();
 
+  /// 成长模块当前是单页布局（对齐 phone-05 原型），子 tab 由 [GrowthHomePage] 内部
+  /// 处理；模块的 [tabs] 留空让 AppShell 走 buildHomePage。
   @override
-  List<ModuleTab> get tabs => const [
-    ModuleTab(
-      id: 'goals',
-      label: '目标',
-      iconName: 'modules/growth.svg',
-      builder: _placeholder,
-    ),
-    ModuleTab(
-      id: 'projects',
-      label: '项目',
-      iconName: 'modules/briefcase.svg',
-      builder: _placeholder,
-    ),
-    ModuleTab(
-      id: 'learning',
-      label: '学习',
-      iconName: 'modules/report.svg',
-      builder: _placeholder,
-    ),
-    ModuleTab(
-      id: 'resume',
-      label: '简历',
-      iconName: 'common/info.svg',
-      builder: _placeholder,
-    ),
-  ];
+  List<ModuleTab> get tabs => const [];
 
   @override
   SpecialistAgent? get subAgent => const SpecialistAgent(
@@ -81,5 +57,3 @@ class GrowthModule implements BulterModule {
   @override
   Future<void> onDispose() async {}
 }
-
-Widget _placeholder(BuildContext context) => const SizedBox.shrink();

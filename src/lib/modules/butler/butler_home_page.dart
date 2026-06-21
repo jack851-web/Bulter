@@ -155,17 +155,8 @@ class _Greeting extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '$greeting，',
+          '$greeting，小明',
           style: const TextStyle(
-            fontSize: BulterFontSize.body,
-            color: BulterColors.textSecondary,
-            height: 1.4,
-          ),
-        ),
-        const SizedBox(height: 2),
-        const Text(
-          '下午好，小明',
-          style: TextStyle(
             fontSize: BulterFontSize.displayS,
             fontWeight: BulterFontWeight.bold,
             color: BulterColors.textPrimary,

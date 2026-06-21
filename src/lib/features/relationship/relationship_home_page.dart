@@ -238,7 +238,9 @@ class _AiRelationshipCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '你的核心关系 5 人\n李华、妈妈、王老师是 3 个\n建议定期关怀。',
+                  contactCount > 0
+                      ? '你已经记录 $contactCount 位联系人。\n让 Bulter 帮你定期维护关系网。'
+                      : '还没有联系人。\n添加家人、朋友、同事，开始编织你的关系网。',
                   style: const TextStyle(
                     fontSize: BulterFontSize.body,
                     color: BulterColors.textPrimary,

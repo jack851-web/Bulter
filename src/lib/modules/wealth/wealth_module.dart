@@ -29,33 +29,10 @@ class WealthModule implements BulterModule {
   @override
   Widget buildHomePage(BuildContext context) => const WealthHomePage();
 
+  /// 财富模块当前是单页布局（对齐 phone-06 原型），子 tab 由 [WealthHomePage] 内部
+  /// 处理；模块的 [tabs] 留空让 AppShell 走 buildHomePage。
   @override
-  List<ModuleTab> get tabs => const [
-    ModuleTab(
-      id: 'overview',
-      label: '总览',
-      iconName: 'modules/chart.svg',
-      builder: _placeholder,
-    ),
-    ModuleTab(
-      id: 'records',
-      label: '账单',
-      iconName: 'common/receipt.svg',
-      builder: _placeholder,
-    ),
-    ModuleTab(
-      id: 'budgets',
-      label: '预算',
-      iconName: 'modules/wealth.svg',
-      builder: _placeholder,
-    ),
-    ModuleTab(
-      id: 'analysis',
-      label: '分析',
-      iconName: 'modules/chart.svg',
-      builder: _placeholder,
-    ),
-  ];
+  List<ModuleTab> get tabs => const [];
 
   @override
   SpecialistAgent? get subAgent => const SpecialistAgent(
@@ -88,5 +65,3 @@ class WealthModule implements BulterModule {
   @override
   Future<void> onDispose() async {}
 }
-
-Widget _placeholder(BuildContext context) => const SizedBox.shrink();

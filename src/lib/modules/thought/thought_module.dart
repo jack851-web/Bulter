@@ -29,33 +29,10 @@ class ThoughtModule implements BulterModule {
   @override
   Widget buildHomePage(BuildContext context) => const ThoughtHomePage();
 
+  /// 思想模块当前是单页布局（对齐 phone-07 原型），子 tab 由 [ThoughtHomePage] 内部
+  /// 处理；模块的 [tabs] 留空让 AppShell 走 buildHomePage。
   @override
-  List<ModuleTab> get tabs => const [
-    ModuleTab(
-      id: 'thoughts',
-      label: '读后感',
-      iconName: 'modules/thought.svg',
-      builder: _placeholder,
-    ),
-    ModuleTab(
-      id: 'letters',
-      label: '信件',
-      iconName: 'modules/mail.svg',
-      builder: _placeholder,
-    ),
-    ModuleTab(
-      id: 'review',
-      label: '回顾',
-      iconName: 'modules/trending-up.svg',
-      builder: _placeholder,
-    ),
-    ModuleTab(
-      id: 'tags',
-      label: '标签',
-      iconName: 'common/plus.svg',
-      builder: _placeholder,
-    ),
-  ];
+  List<ModuleTab> get tabs => const [];
 
   @override
   SpecialistAgent? get subAgent => const SpecialistAgent(
@@ -88,5 +65,3 @@ class ThoughtModule implements BulterModule {
   @override
   Future<void> onDispose() async {}
 }
-
-Widget _placeholder(BuildContext context) => const SizedBox.shrink();

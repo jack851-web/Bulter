@@ -29,33 +29,10 @@ class RelationshipModule implements BulterModule {
   @override
   Widget buildHomePage(BuildContext context) => const RelationshipHomePage();
 
+  /// 关系模块当前是单页布局（对齐 phone-04 原型），底部 tab 在 [_Body] 内部按
+  ///"联系人 / 互动 / 人情" 切分，模块的 [tabs] 留空让 AppShell 走 buildHomePage。
   @override
-  List<ModuleTab> get tabs => const [
-    ModuleTab(
-      id: 'list',
-      label: '联系人',
-      iconName: 'modules/relationship.svg',
-      builder: _placeholder,
-    ),
-    ModuleTab(
-      id: 'timeline',
-      label: '互动',
-      iconName: 'modules/timeline.svg',
-      builder: _placeholder,
-    ),
-    ModuleTab(
-      id: 'favors',
-      label: '人情',
-      iconName: 'modules/briefcase-filled.svg',
-      builder: _placeholder,
-    ),
-    ModuleTab(
-      id: 'appts',
-      label: '约定',
-      iconName: 'modules/mail.svg',
-      builder: _placeholder,
-    ),
-  ];
+  List<ModuleTab> get tabs => const [];
 
   @override
   SpecialistAgent? get subAgent => const SpecialistAgent(
@@ -91,5 +68,3 @@ class RelationshipModule implements BulterModule {
   @override
   Future<void> onDispose() async {}
 }
-
-Widget _placeholder(BuildContext context) => const SizedBox.shrink();

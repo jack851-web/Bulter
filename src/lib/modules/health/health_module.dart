@@ -29,33 +29,10 @@ class HealthModule implements BulterModule {
   @override
   Widget buildHomePage(BuildContext context) => const HealthHomePage();
 
+  /// 健康模块当前是单页布局（对齐 phone-10 原型），子 tab 由 [HealthHomePage] 内部
+  /// 处理；模块的 [tabs] 留空让 AppShell 走 buildHomePage。
   @override
-  List<ModuleTab> get tabs => const [
-    ModuleTab(
-      id: 'records',
-      label: '记录',
-      iconName: 'modules/timeline.svg',
-      builder: _placeholder,
-    ),
-    ModuleTab(
-      id: 'reports',
-      label: '体检',
-      iconName: 'modules/report.svg',
-      builder: _placeholder,
-    ),
-    ModuleTab(
-      id: 'trends',
-      label: '趋势',
-      iconName: 'modules/chart.svg',
-      builder: _placeholder,
-    ),
-    ModuleTab(
-      id: 'devices',
-      label: '设备',
-      iconName: 'modules/chip.svg',
-      builder: _placeholder,
-    ),
-  ];
+  List<ModuleTab> get tabs => const [];
 
   @override
   SpecialistAgent? get subAgent => const SpecialistAgent(
@@ -90,5 +67,3 @@ class HealthModule implements BulterModule {
   @override
   Future<void> onDispose() async {}
 }
-
-Widget _placeholder(BuildContext context) => const SizedBox.shrink();
