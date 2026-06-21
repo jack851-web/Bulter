@@ -1,4 +1,6 @@
 import 'ai/ai_service.dart';
+import 'ai/briefing/briefing_scheduler.dart';
+import 'ai/briefing/briefing_store.dart';
 import 'ai/memory/long_term.dart';
 import 'ai/memory/memory_manager.dart';
 import 'ai/memory/user_profile.dart';
@@ -77,6 +79,10 @@ Future<void> bootstrapApp({String? subdir}) async {
 
   // 4. RAG / 长期记忆 初始化
   await _initRag();
+
+  // 5. 简报系统初始化（Step 9）：先打开 Hive Box + 从 Drift 加载缓存，再启动调度器
+  await BriefingStore.instance.init();
+  BriefingScheduler.instance.start();
 }
 
 /// 初始化 RAG 子系统（Step 6）。
@@ -106,10 +112,7 @@ Future<void> _initRag() async {
   );
 
   // 4) 用户画像（Step 7）
-  final profile = UserProfileMemory(
-    db: db,
-    aiService: AiService.instance,
-  );
+  final profile = UserProfileMemory(db: db, aiService: AiService.instance);
 
   // 5) 4 层记忆统一管理器（Step 7）
   final memory = MemoryManager(
@@ -124,11 +127,7 @@ Future<void> _initRag() async {
 
   // 6) 绑给 AI 服务
   AiService.bindRag(
-    RagBundle(
-      injector: injector,
-      longTerm: longTerm,
-      memory: memory,
-    ),
+    RagBundle(injector: injector, longTerm: longTerm, memory: memory),
   );
 }
 

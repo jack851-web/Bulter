@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../ai/briefing/briefing_models.dart';
+import '../../ai/briefing/briefing_store.dart';
 import '../../components/svg_icon.dart';
 import '../../theme/tokens.dart';
 import '../../features/relationship/relationship_home_page.dart';
@@ -7,6 +9,7 @@ import '../../features/growth/growth_home_page.dart';
 import '../../features/wealth/wealth_home_page.dart';
 import '../../features/thought/thought_home_page.dart';
 import '../../features/health/health_home_page.dart';
+import '../../modules/bulter_module.dart';
 
 /// Butler 中枢主页（原型：phone-01-home.png）。
 ///
@@ -50,62 +53,70 @@ class ButlerHomePage extends StatelessWidget {
           sliver: SliverList.list(
             children: [
               const SizedBox(height: BulterSpacing.m),
-              _ModuleCard(
+              _BriefingModuleCard(
+                moduleId: ModuleId.relationship,
                 moduleName: '关系',
                 brandColor: BulterColors.relationship,
                 icon: 'modules/relationship.svg',
-                subtitle: '让关系网被看见',
-                headline: '李华、妈妈、王老师是你的核心 3 人',
-                chips: const [
+                fallbackHeadline: '李华、妈妈、王老师是你的核心 3 人',
+                fallbackSubtitle: '让关系网被看见',
+                fallbackChips: const [
                   _ChipData('待联系', '2 位'),
                   _ChipData('人情', '1 笔未还'),
                 ],
                 onTap: _openRelationship,
               ),
               const SizedBox(height: BulterSpacing.m),
-              _ModuleCard(
+              _BriefingModuleCard(
+                moduleId: ModuleId.growth,
                 moduleName: '成长',
                 brandColor: BulterColors.growth,
                 icon: 'modules/growth.svg',
-                subtitle: '把模糊的愿望变成可追踪的目标',
-                headline: 'OKR 收尾期：完成《Kotlin 协程》读书',
-                chips: const [
+                fallbackHeadline: 'OKR 收尾期：完成《Kotlin 协程》读书',
+                fallbackSubtitle: '把模糊的愿望变成可追踪的目标',
+                fallbackChips: const [
                   _ChipData('OKR 进度', '50%'),
                   _ChipData('进行中', '3 项'),
                 ],
                 onTap: _openGrowth,
               ),
               const SizedBox(height: BulterSpacing.m),
-              _ModuleCard(
+              _BriefingModuleCard(
+                moduleId: ModuleId.wealth,
                 moduleName: '财富',
                 brandColor: BulterColors.wealth,
                 icon: 'modules/wealth.svg',
-                subtitle: '知道钱去哪里',
-                headline: '本月餐饮支出已超预算 ¥120',
-                chips: const [
+                fallbackHeadline: '本月餐饮支出已超预算 ¥120',
+                fallbackSubtitle: '知道钱去哪里',
+                fallbackChips: const [
                   _ChipData('余额', '¥4,820'),
                   _ChipData('预算剩余', '¥680'),
                 ],
                 onTap: _openWealth,
               ),
               const SizedBox(height: BulterSpacing.m),
-              _ModuleCard(
+              _BriefingModuleCard(
+                moduleId: ModuleId.thought,
                 moduleName: '思想',
                 brandColor: BulterColors.thought,
                 icon: 'modules/thought.svg',
-                subtitle: '把灵感沉淀为可回看的笔记',
-                headline: '《置身事内》读后感完成',
-                chips: const [_ChipData('想法', '5 条'), _ChipData('信件', '2 封')],
+                fallbackHeadline: '《置身事内》读后感完成',
+                fallbackSubtitle: '把灵感沉淀为可回看的笔记',
+                fallbackChips: const [
+                  _ChipData('想法', '5 条'),
+                  _ChipData('信件', '2 封'),
+                ],
                 onTap: _openThought,
               ),
               const SizedBox(height: BulterSpacing.m),
-              _ModuleCard(
+              _BriefingModuleCard(
+                moduleId: ModuleId.health,
                 moduleName: '健康',
                 brandColor: BulterColors.health,
                 icon: 'modules/health.svg',
-                subtitle: '身体是其他一切的基础',
-                headline: '日均睡眠 7.2h，体脂 22.1%',
-                chips: const [
+                fallbackHeadline: '日均睡眠 7.2h，体脂 22.1%',
+                fallbackSubtitle: '身体是其他一切的基础',
+                fallbackChips: const [
                   _ChipData('记录', '14 次'),
                   _ChipData('睡眠均值', '8.0h'),
                 ],
@@ -164,13 +175,25 @@ class _Greeting extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        const Text(
-          '今天 3 件事待已入栈，4 件事待呈',
-          style: TextStyle(
-            fontSize: BulterFontSize.footnote,
-            color: BulterColors.textSecondary,
-            height: 1.4,
+        ValueListenableBuilder<ModuleBriefing?>(
+          valueListenable: BriefingStore.instance.watchBriefing(
+            ModuleId.butler,
           ),
+          builder: (_, b, __) {
+            final hint = b?.summary.isNotEmpty == true
+                ? b!.summary.replaceAll('\n', ' · ')
+                : '正在为你汇总今日简报…';
+            return Text(
+              hint,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: BulterFontSize.footnote,
+                color: BulterColors.textSecondary,
+                height: 1.4,
+              ),
+            );
+          },
         ),
       ],
     );
@@ -182,53 +205,80 @@ class _ButlerInsight extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(BulterSpacing.xl),
-      decoration: BoxDecoration(
-        color: BulterColors.butler.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(BulterRadius.xxl),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'AI 助理',
-            style: TextStyle(
-              fontSize: BulterFontSize.caption,
-              fontWeight: BulterFontWeight.semibold,
-              color: BulterColors.butler,
-              letterSpacing: 0.4,
-            ),
+    return ValueListenableBuilder<ModuleBriefing?>(
+      valueListenable: BriefingStore.instance.watchBriefing(ModuleId.butler),
+      builder: (_, b, __) {
+        final headline = b?.headline ?? '今天有 0 件无法决定';
+        final summary = b?.summary ?? '正在汇总今日简报…';
+        final chips = b?.chips ?? const <BriefingChip>[];
+        final stale = b?.isStale() ?? true;
+        return Container(
+          padding: const EdgeInsets.all(BulterSpacing.xl),
+          decoration: BoxDecoration(
+            color: BulterColors.butler.withValues(alpha: 0.18),
+            borderRadius: BorderRadius.circular(BulterRadius.xxl),
           ),
-          const SizedBox(height: BulterSpacing.s),
-          const Text(
-            'Butler · 今日',
-            style: TextStyle(
-              fontSize: BulterFontSize.titleM,
-              fontWeight: BulterFontWeight.bold,
-              color: BulterColors.textPrimary,
-              height: 1.25,
-            ),
-          ),
-          const SizedBox(height: BulterSpacing.s),
-          const Text(
-            '今天有 3 件事无法被你来决定。\n已为已规划的时间段。',
-            style: TextStyle(
-              fontSize: BulterFontSize.body,
-              color: BulterColors.textSecondary,
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: BulterSpacing.l),
-          Row(
-            children: const [
-              _ButlerPill(label: '2 个待呈'),
-              SizedBox(width: BulterSpacing.s),
-              _ButlerPill(label: '1 个待人'),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Text(
+                    'AI 助理',
+                    style: TextStyle(
+                      fontSize: BulterFontSize.caption,
+                      fontWeight: BulterFontWeight.semibold,
+                      color: BulterColors.butler,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (b != null)
+                    Text(
+                      stale
+                          ? '过期 · ${b.freshnessLabel()}'
+                          : '更新于 ${b.freshnessLabel()}',
+                      style: const TextStyle(
+                        fontSize: BulterFontSize.caption,
+                        color: BulterColors.textTertiary,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: BulterSpacing.s),
+              Text(
+                headline,
+                style: const TextStyle(
+                  fontSize: BulterFontSize.titleM,
+                  fontWeight: BulterFontWeight.bold,
+                  color: BulterColors.textPrimary,
+                  height: 1.25,
+                ),
+              ),
+              const SizedBox(height: BulterSpacing.s),
+              Text(
+                summary,
+                style: const TextStyle(
+                  fontSize: BulterFontSize.body,
+                  color: BulterColors.textSecondary,
+                  height: 1.5,
+                ),
+              ),
+              if (chips.isNotEmpty) ...[
+                const SizedBox(height: BulterSpacing.l),
+                Wrap(
+                  spacing: BulterSpacing.s,
+                  runSpacing: BulterSpacing.s,
+                  children: [
+                    for (final c in chips.take(4))
+                      _ButlerPill(label: '${c.label} ${c.value}'),
+                  ],
+                ),
+              ],
             ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -270,108 +320,143 @@ class _ChipData {
   const _ChipData(this.label, this.value);
 }
 
-class _ModuleCard extends StatelessWidget {
+class _BriefingModuleCard extends StatelessWidget {
+  final String moduleId;
   final String moduleName;
   final Color brandColor;
   final String icon;
-  final String subtitle;
-  final String headline;
-  final List<_ChipData> chips;
+  final String fallbackHeadline;
+  final String fallbackSubtitle;
+  final List<_ChipData> fallbackChips;
   final ValueChanged<BuildContext> onTap;
 
-  const _ModuleCard({
+  const _BriefingModuleCard({
+    required this.moduleId,
     required this.moduleName,
     required this.brandColor,
     required this.icon,
-    required this.subtitle,
-    required this.headline,
-    required this.chips,
+    required this.fallbackHeadline,
+    required this.fallbackSubtitle,
+    required this.fallbackChips,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(BulterRadius.xxl),
-        onTap: () => onTap(context),
-        child: Container(
-          padding: const EdgeInsets.all(BulterSpacing.xl),
-          decoration: BoxDecoration(
-            color: brandColor.withValues(alpha: 0.18),
+    return ValueListenableBuilder<ModuleBriefing?>(
+      valueListenable: BriefingStore.instance.watchBriefing(moduleId),
+      builder: (_, b, __) {
+        final headline = b?.headline ?? fallbackHeadline;
+        final subtitle = b?.summary.isNotEmpty == true
+            ? b!.summary
+            : fallbackSubtitle;
+        final chips = b != null && b.chips.isNotEmpty
+            ? [for (final c in b.chips) _ChipData(c.label, c.value)]
+            : fallbackChips;
+        final stale = b?.isStale() ?? true;
+
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
             borderRadius: BorderRadius.circular(BulterRadius.xxl),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+            onTap: () => onTap(context),
+            child: Container(
+              padding: const EdgeInsets.all(BulterSpacing.xl),
+              decoration: BoxDecoration(
+                color: brandColor.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(BulterRadius.xxl),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: BulterSpacing.s + 2,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: brandColor,
-                      borderRadius: BorderRadius.circular(BulterRadius.pill),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SvgIcon(icon, size: 12, color: BulterColors.ctaText),
-                        const SizedBox(width: 4),
-                        Text(
-                          moduleName,
-                          style: const TextStyle(
-                            color: BulterColors.ctaText,
-                            fontSize: BulterFontSize.caption,
-                            fontWeight: BulterFontWeight.bold,
-                            letterSpacing: 0.4,
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: BulterSpacing.s + 2,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: brandColor,
+                          borderRadius: BorderRadius.circular(
+                            BulterRadius.pill,
                           ),
                         ),
-                      ],
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SvgIcon(
+                              icon,
+                              size: 12,
+                              color: BulterColors.ctaText,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              moduleName,
+                              style: const TextStyle(
+                                color: BulterColors.ctaText,
+                                fontSize: BulterFontSize.caption,
+                                fontWeight: BulterFontWeight.bold,
+                                letterSpacing: 0.4,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      if (b != null)
+                        Text(
+                          stale ? '过期' : b.freshnessLabel(),
+                          style: TextStyle(
+                            fontSize: BulterFontSize.caption,
+                            color: stale
+                                ? BulterColors.warning
+                                : BulterColors.textTertiary,
+                          ),
+                        ),
+                      const SizedBox(width: 6),
+                      SvgIcon(
+                        'common/chevron-right.svg',
+                        size: 18,
+                        color: brandColor,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: BulterSpacing.m),
+                  Text(
+                    headline,
+                    style: const TextStyle(
+                      fontSize: BulterFontSize.bodyLg,
+                      fontWeight: BulterFontWeight.semibold,
+                      color: BulterColors.textPrimary,
+                      height: 1.4,
                     ),
                   ),
-                  const Spacer(),
-                  SvgIcon(
-                    'common/chevron-right.svg',
-                    size: 18,
-                    color: brandColor,
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: BulterFontSize.footnote,
+                      color: BulterColors.textSecondary,
+                      height: 1.4,
+                    ),
                   ),
+                  if (chips.isNotEmpty) ...[
+                    const SizedBox(height: BulterSpacing.m),
+                    Wrap(
+                      spacing: BulterSpacing.s,
+                      runSpacing: BulterSpacing.s,
+                      children: [for (final c in chips) _ModulePill(data: c)],
+                    ),
+                  ],
                 ],
               ),
-              const SizedBox(height: BulterSpacing.m),
-              Text(
-                headline,
-                style: const TextStyle(
-                  fontSize: BulterFontSize.bodyLg,
-                  fontWeight: BulterFontWeight.semibold,
-                  color: BulterColors.textPrimary,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  fontSize: BulterFontSize.footnote,
-                  color: BulterColors.textSecondary,
-                  height: 1.4,
-                ),
-              ),
-              if (chips.isNotEmpty) ...[
-                const SizedBox(height: BulterSpacing.m),
-                Wrap(
-                  spacing: BulterSpacing.s,
-                  runSpacing: BulterSpacing.s,
-                  children: [for (final c in chips) _ModulePill(data: c)],
-                ),
-              ],
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
