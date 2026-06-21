@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../ai/model_registry.dart';
 import '../../components/bulter_scaffold.dart';
 import '../../components/svg_icon.dart';
+import '../../modules/registry.dart';
 import '../../theme/tokens.dart';
 import 'model_config_page.dart';
 
-/// 设置页（Step 1 占位，Step 4 后接入模型配置 / 数据导出等）
+/// 设置页（对齐 phone-11 原型）。
+///
+/// **结构**：
+///   1) 顶部用户卡（圆形品牌色头像 + 名字 + 简介 + chevron）
+///   2) AI 助理 section（模型 / API Key / 长期记忆 / 用户画像）
+///   3) 模块入口 section（关系 / 成长 / 财富 / 思想 / 健康 / 记忆）
+///   4) 数据 section（导出 / 导入 - 占位）
+///   5) 关于
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
@@ -15,40 +24,61 @@ class SettingsPage extends StatelessWidget {
     final active = ModelRegistry.instance.active;
     final apiStatus = active.apiKey.isNotEmpty ? '已配置' : '未配置';
     final modelStatus = '${active.vendorLabel} · ${active.model}';
+    final modules = ModuleRegistry.instance.capsuleModules;
 
     return BulterScaffold(
       title: '设置',
       child: ListView(
         physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(
+          BulterSpacing.l,
+          BulterSpacing.s,
+          BulterSpacing.l,
+          BulterSpacing.huge,
+        ),
         children: [
-          const SizedBox(height: BulterSpacing.s),
+          const _UserCard(),
+          const SizedBox(height: BulterSpacing.xl),
           _Section(
-            title: 'AI',
+            title: 'AI 助理',
             items: [
               _Item(
                 icon: 'settings/model.svg',
                 title: '模型',
                 subtitle: modelStatus,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const ModelConfigPage(),
-                    ),
-                  );
-                },
+                onTap: () => _push(context, const ModelConfigPage()),
               ),
               _Item(
                 icon: 'settings/key.svg',
                 title: 'API Key',
                 subtitle: apiStatus,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const ModelConfigPage(),
-                    ),
-                  );
-                },
+                onTap: () => _push(context, const ModelConfigPage()),
               ),
+              _Item(
+                icon: 'modules/memory.svg',
+                title: '长期记忆',
+                subtitle: '查看 / 管理 AI 记住的内容',
+                onTap: () => context.pushNamed('memory'),
+              ),
+              _Item(
+                icon: 'common/user.svg',
+                title: '用户画像',
+                subtitle: '查看 / 编辑 AI 提取的关于你的信息',
+                onTap: () => context.pushNamed('settings.profile'),
+              ),
+            ],
+          ),
+          const SizedBox(height: BulterSpacing.l),
+          _Section(
+            title: '模块',
+            items: [
+              for (final m in modules.where((m) => m.id != 'butler'))
+                _Item(
+                  icon: _iconFor(m.id),
+                  title: m.displayName,
+                  subtitle: _subtitleFor(m.id),
+                  brandColor: m.brandColor,
+                ),
             ],
           ),
           const SizedBox(height: BulterSpacing.l),
@@ -74,7 +104,7 @@ class SettingsPage extends StatelessWidget {
               _Item(
                 icon: 'common/info.svg',
                 title: '关于 Bulter',
-                subtitle: 'v0.4.0 · Step 4',
+                subtitle: 'v0.5.0 · Step 5',
               ),
             ],
           ),
@@ -82,7 +112,120 @@ class SettingsPage extends StatelessWidget {
       ),
     );
   }
+
+  void _push(BuildContext context, Widget page) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => page),
+    );
+  }
+
+  static String _iconFor(String id) => switch (id) {
+        'relationship' => 'modules/relationship.svg',
+        'growth' => 'modules/growth.svg',
+        'wealth' => 'modules/wealth.svg',
+        'thought' => 'modules/thought.svg',
+        'health' => 'modules/health.svg',
+        'memory' => 'modules/memory.svg',
+        'demo' => 'common/circle.svg',
+        _ => 'common/circle.svg',
+      };
+
+  static String _subtitleFor(String id) => switch (id) {
+        'relationship' => '人脉 · 关怀',
+        'growth' => '目标 · 学习',
+        'wealth' => '账户 · 流水',
+        'thought' => '想法 · 信件',
+        'health' => '记录 · 体检',
+        'memory' => 'RAG 语义记忆',
+        'demo' => '模块化验证',
+        _ => '',
+      };
 }
+
+// ============================================================
+// 用户卡
+// ============================================================
+
+class _UserCard extends StatelessWidget {
+  const _UserCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: BulterColors.surface,
+      borderRadius: BorderRadius.circular(BulterRadius.l),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(BulterRadius.l),
+        onTap: () => context.pushNamed('settings.profile'),
+        child: Container(
+          padding: const EdgeInsets.all(BulterSpacing.l),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(BulterRadius.l),
+            border: Border.all(color: BulterColors.divider, width: 0.5),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [BulterColors.relationship, BulterColors.butler],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(BulterRadius.l),
+                ),
+                alignment: Alignment.center,
+                child: const Text(
+                  '小',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: BulterFontWeight.heavy,
+                    color: BulterColors.ctaText,
+                  ),
+                ),
+              ),
+              const SizedBox(width: BulterSpacing.l),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      '小明',
+                      style: TextStyle(
+                        fontSize: BulterFontSize.titleS,
+                        fontWeight: BulterFontWeight.semibold,
+                        color: BulterColors.textPrimary,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'AI 助理 / 经营咖啡馆 / 上海',
+                      style: TextStyle(
+                        fontSize: BulterFontSize.footnote,
+                        color: BulterColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SvgIcon(
+                'common/chevron-right.svg',
+                size: 18,
+                color: BulterColors.textTertiary,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// Section（统一圆角卡容器）
+// ============================================================
 
 class _Section extends StatelessWidget {
   final String title;
@@ -119,7 +262,7 @@ class _Section extends StatelessWidget {
             children: [
               for (var i = 0; i < items.length; i++) ...[
                 if (i > 0)
-                  const Divider(height: 0.5, indent: BulterSpacing.l + 32),
+                  const Divider(height: 0.5, indent: BulterSpacing.l + 40),
                 _ItemTile(item: items[i]),
               ],
             ],
@@ -134,11 +277,13 @@ class _Item {
   final String icon;
   final String title;
   final String subtitle;
+  final Color? brandColor;
   final VoidCallback? onTap;
   const _Item({
     required this.icon,
     required this.title,
     required this.subtitle,
+    this.brandColor,
     this.onTap,
   });
 }
@@ -149,6 +294,7 @@ class _ItemTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final color = item.brandColor ?? BulterColors.textPrimary;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -160,7 +306,16 @@ class _ItemTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              SvgIcon(item.icon, size: 20, color: BulterColors.textPrimary),
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(BulterRadius.s),
+                ),
+                alignment: Alignment.center,
+                child: SvgIcon(item.icon, size: 16, color: color),
+              ),
               const SizedBox(width: BulterSpacing.m),
               Expanded(
                 child: Column(
@@ -177,6 +332,8 @@ class _ItemTile extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       item.subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: BulterFontSize.footnote,
                         color: BulterColors.textSecondary,
@@ -185,11 +342,12 @@ class _ItemTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const SvgIcon(
-                'common/chevron-right.svg',
-                size: 18,
-                color: BulterColors.textTertiary,
-              ),
+              if (item.onTap != null)
+                const SvgIcon(
+                  'common/chevron-right.svg',
+                  size: 18,
+                  color: BulterColors.textTertiary,
+                ),
             ],
           ),
         ),

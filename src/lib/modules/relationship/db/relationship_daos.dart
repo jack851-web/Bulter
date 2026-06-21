@@ -50,6 +50,16 @@ class RelationshipDao extends DatabaseAccessor<AppDatabase>
         .watch();
   }
 
+  /// 全量互动流（用于主页"距上次联系天数"统计）。
+  Stream<List<Interaction>> watchAllInteractions() {
+    return (select(interactions)
+          ..orderBy([
+            (i) =>
+                OrderingTerm(expression: i.happenedAt, mode: OrderingMode.desc),
+          ]))
+        .watch();
+  }
+
   Future<int> insertInteraction(InteractionsCompanion i) =>
       into(interactions).insert(i);
 

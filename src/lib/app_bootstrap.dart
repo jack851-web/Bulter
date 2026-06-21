@@ -1,11 +1,18 @@
 import 'ai/ai_service.dart';
+import 'ai/memory/long_term.dart';
+import 'ai/memory/memory_manager.dart';
+import 'ai/memory/user_profile.dart';
 import 'ai/model_registry.dart';
+import 'ai/rag/context_injector.dart';
+import 'ai/rag/embedder.dart';
+import 'ai/rag/retriever.dart';
 import 'ai/sub_agents/sub_agent_registry.dart';
 import 'ai/tools/bulter_tools_bootstrap.dart';
 import 'ai/tools/tool_registry.dart';
 import 'db/app_database.dart';
 import 'db/backup.dart';
 import 'db/connection.dart';
+import 'db/vector_store.dart';
 import 'modules/butler/butler_module.dart';
 import 'modules/demo/demo_module.dart';
 import 'modules/growth/growth_module.dart';
@@ -67,6 +74,62 @@ Future<void> bootstrapApp({String? subdir}) async {
   for (final entry in SubAgentRegistry.instance.allToolRegistries.entries) {
     BulterToolsBootstrap.registerAll(entry.value, AppDatabase.I);
   }
+
+  // 4. RAG / 长期记忆 初始化
+  await _initRag();
+}
+
+/// 初始化 RAG 子系统（Step 6）。
+///
+/// 顺序：
+/// 1. 解析 Embedder（OpenAI 兼容 / LocalHash）
+/// 2. 用 Embedder 的维度建（或迁移）sqlite-vec 虚拟表
+/// 3. 构造 Retriever + ContextInjector + LongTermMemory
+/// 4. 绑给 AiService.streamCompletion
+Future<void> _initRag() async {
+  final db = AppDatabase.I;
+  final embedder = EmbedderFactory.resolve();
+
+  // 1) 确保 vec_embeddings 表存在 / 维度匹配
+  await db.vectorStore.ensureTable(dimensions: embedder.dimensions);
+
+  // 2) 构造检索 + 注入
+  final retriever = Retriever(embedder: embedder, store: db.vectorStore);
+  final injector = ContextInjector(retriever: retriever);
+
+  // 3) 长期记忆
+  final longTerm = LongTermMemory(
+    db: db,
+    embedder: embedder,
+    retriever: retriever,
+    aiService: AiService.instance,
+  );
+
+  // 4) 用户画像（Step 7）
+  final profile = UserProfileMemory(
+    db: db,
+    aiService: AiService.instance,
+  );
+
+  // 5) 4 层记忆统一管理器（Step 7）
+  final memory = MemoryManager(
+    db: db,
+    embedder: embedder,
+    retriever: retriever,
+    injector: injector,
+    longTerm: longTerm,
+    userProfile: profile,
+    aiService: AiService.instance,
+  );
+
+  // 6) 绑给 AI 服务
+  AiService.bindRag(
+    RagBundle(
+      injector: injector,
+      longTerm: longTerm,
+      memory: memory,
+    ),
+  );
 }
 
 /// 数据库迁移入口。

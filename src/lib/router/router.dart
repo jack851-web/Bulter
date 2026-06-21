@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../features/memory/memory_page.dart';
 import '../features/settings/model_config_page.dart';
+import '../features/settings/user_profile_page.dart';
 import '../modules/bulter_module.dart';
 import '../modules/registry.dart';
 import 'app_shell.dart';
@@ -21,6 +23,18 @@ GoRouter buildRouter(ModuleRegistry registry) {
         path: '/settings/model',
         name: 'settings.model',
         builder: (context, state) => const ModelConfigPage(),
+      ),
+      // 记忆浏览页（Step 6：长期记忆管理）
+      GoRoute(
+        path: '/memory',
+        name: 'memory',
+        builder: (context, state) => const MemoryPage(),
+      ),
+      // 用户画像页（Step 7：查看 / 编辑 AI 抽取的画像）
+      GoRoute(
+        path: '/settings/profile',
+        name: 'settings.profile',
+        builder: (context, state) => const UserProfilePage(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
