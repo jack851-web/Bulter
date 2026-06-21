@@ -4,9 +4,15 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
+import 'memory/long_term.dart';
+import 'memory/memory_manager.dart';
 import 'memory/short_term.dart';
 import 'model_registry.dart';
+import 'rag/context_injector.dart';
+import 'rag/embedder.dart';
+import 'rag/retriever.dart';
 import 'tools/relationship_tools.dart';
+import 'tools/wealth_tools.dart';
 import 'tools/thought_tools.dart';
 import 'tools/health_tools.dart';
 import 'tools/growth_tools.dart';
@@ -23,6 +29,12 @@ class ChatStreamEvent {
   final List<PendingToolCall> toolCalls;
   final List<ToolRunResult> toolResults;
 
+  /// 本轮 RAG 注入的记忆条数（> 0 时仅触发一次，UI 状态条用）。
+  final int ragInjectedCount;
+
+  /// 长记忆抽取结果（> 0 时仅触发一次，UI 状态条用）。
+  final ExtractResult? extractResult;
+
   const ChatStreamEvent({
     this.delta = '',
     this.done = false,
@@ -30,6 +42,8 @@ class ChatStreamEvent {
     this.statusCode,
     this.toolCalls = const [],
     this.toolResults = const [],
+    this.ragInjectedCount = 0,
+    this.extractResult,
   });
 
   bool get isError => error != null;
@@ -129,6 +143,13 @@ class AiService {
     _boundDb = db;
   }
 
+  /// RAG / 长期记忆 绑定（被 app_bootstrap 调用）。
+  static RagBundle? _rag;
+  static RagBundle? get rag => _rag;
+  static void bindRag(RagBundle bundle) {
+    _rag = bundle;
+  }
+
   /// 内部使用的 system 提示模板。
   static const String systemPromptTemplate =
       '你是 Bulter —— 一个本地优先、长期记忆的个人 AI 管家。'
@@ -139,6 +160,39 @@ class AiService {
       '当工具返回 status=pending_confirmation 时，把确认提示原样展示给用户，并等待用户确认。';
 
   String buildSystemPrompt(ShortTermMemory memory) => systemPromptTemplate;
+
+  /// 构造增强后的 system prompt（含 RAG 注入）。每次调用前都重新生成。
+  ///
+  /// Step 7：优先走 `MemoryManager.buildSystemPrompt`，把"用户画像 + 工作记忆
+  /// + RAG"一并注入。RAG 未绑定时退化为旧路径。
+  Future<String> buildEnhancedSystemPrompt(ShortTermMemory memory) async {
+    final manager = _rag?.memory;
+    if (manager != null) {
+      try {
+        final prompt = await manager.buildSystemPrompt(memory);
+        // 同步 lastInjectedCount（UI 用）
+        _lastInjectedForUi = manager.injector.lastInjectedCount;
+        return prompt;
+      } catch (e, st) {
+        debugPrint('AiService.buildEnhancedSystemPrompt (manager) 失败: $e\n$st');
+        // 降级：走旧路径
+      }
+    }
+    final base = buildSystemPrompt(memory);
+    final injector = _rag?.injector;
+    if (injector == null) return base;
+    try {
+      final p = await injector.build(baseSystemPrompt: base, memory: memory);
+      _lastInjectedForUi = injector.lastInjectedCount;
+      return p;
+    } catch (e, st) {
+      debugPrint('AiService.buildEnhancedSystemPrompt 失败: $e\n$st');
+      return base;
+    }
+  }
+
+  int _lastInjectedForUi = 0;
+  int get lastInjectedCount => _lastInjectedForUi;
 
   /// 发起一次流式对话（含 ReAct 循环）。
   Future<void> streamCompletion({
@@ -157,8 +211,37 @@ class AiService {
       return;
     }
 
-    if (!memory.messages.any((m) => m.role == ChatRole.system)) {
-      memory.addSystem(buildSystemPrompt(memory));
+    // 注入 RAG 上下文（每次都重建，确保最新）
+    final systemPrompt = await buildEnhancedSystemPrompt(memory);
+    if (memory.messages.any((m) => m.role == ChatRole.system)) {
+      // 替换已有 system 消息（保留 role / 时间戳）
+      final idx = memory.messages.indexWhere((m) => m.role == ChatRole.system);
+      if (idx >= 0) {
+        final old = memory.messages[idx];
+        memory.messages[idx] = ChatMessage(
+          role: ChatRole.system,
+          content: systemPrompt,
+          createdAt: old.createdAt,
+        );
+      }
+    } else {
+      memory.addSystem(systemPrompt);
+    }
+
+    // 通知 UI：本次注入了多少条记忆（用于状态条）。传递一个非 done 的小事件。
+    final injected = _rag?.injector?.lastInjectedCount ?? 0;
+    if (injected > 0) {
+      callback(
+        ChatStreamEvent(
+          delta: '',
+          done: false,
+          error: null,
+          statusCode: null,
+          toolCalls: const [],
+          toolResults: const [],
+          ragInjectedCount: injected,
+        ),
+      );
     }
 
     final registry = options.toolRegistry ?? ToolRegistry.instance;
@@ -267,6 +350,7 @@ class AiService {
 
       // 没有 tool_calls → 正常结束
       if (toolAccum.isEmpty) {
+        await _maybeExtractLongTerm(memory, callback);
         callback(ChatStreamEvent(done: true));
         return;
       }
@@ -552,6 +636,47 @@ class AiService {
     final msg = first['message'] as Map<String, dynamic>?;
     return (msg?['content'] as String?) ?? '';
   }
+
+  /// 长记忆抽取（Step 6）。
+  ///
+  /// - 增量计数（[LongTermMemory.shouldExtract]），到阈值才真正执行
+  /// - 失败 / 不可用时**不**阻塞主流程
+  Future<void> _maybeExtractLongTerm(
+    ShortTermMemory memory,
+    StreamCallback callback,
+  ) async {
+    final longTerm = _rag?.longTerm;
+    if (longTerm == null) return;
+    try {
+      final result = await longTerm.maybeExtract(memory: memory);
+      if (result.hasChanges) {
+        callback(
+          ChatStreamEvent(
+            delta: '',
+            done: false,
+            error: null,
+            statusCode: null,
+            toolCalls: const [],
+            toolResults: const [],
+            extractResult: result,
+          ),
+        );
+      }
+    } catch (e, st) {
+      debugPrint('AiService._maybeExtractLongTerm 失败: $e\n$st');
+    }
+  }
+}
+
+/// RAG / 长期记忆 总线：
+/// - [injector] 把检索结果注入 system prompt
+/// - [longTerm] 在每 N 轮对话后从历史里抽取事实写入向量库
+/// - [memory] 4 层记忆统一管理器（Step 7：用户画像 + 工作记忆 + RAG + 短记忆）
+class RagBundle {
+  final ContextInjector injector;
+  final LongTermMemory longTerm;
+  final MemoryManager? memory;
+  RagBundle({required this.injector, required this.longTerm, this.memory});
 }
 
 class _ToolAccum {
