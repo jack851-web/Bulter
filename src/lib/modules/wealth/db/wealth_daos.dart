@@ -19,6 +19,10 @@ class WealthDao extends DatabaseAccessor<AppDatabase> with _$WealthDaoMixin {
   Future<int> deleteAccount(int id) =>
       (delete(accounts)..where((a) => a.id.equals(id))).go();
 
+  /// Step 12：取第一个账户（CSV 导入时默认账户；没有则 null 由调用方创建）。
+  Future<Account?> firstAccount() =>
+      (select(accounts)..limit(1)).getSingleOrNull();
+
   Stream<List<Transaction>> watchRecentTransactions({int limit = 50}) {
     return (select(transactions)
           ..orderBy([
