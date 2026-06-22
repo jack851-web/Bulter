@@ -1,4 +1,5 @@
 import 'package:bulter/db/app_database.dart';
+import 'package:bulter/ai/ai_service.dart';
 import 'package:flutter/material.dart';
 
 import '../../components/svg_icon.dart';
@@ -154,6 +155,30 @@ class _Body extends StatelessWidget {
 class _Greeting extends StatelessWidget {
   const _Greeting();
 
+  /// 星期几中文标签（周日=0）。
+  static const List<String> _weekdays = [
+    '周日',
+    '周一',
+    '周二',
+    '周三',
+    '周四',
+    '周五',
+    '周六',
+  ];
+
+  /// 取用户画像里的 displayName（无则回退到默认"小布"）。
+  static Future<String> _userName() async {
+    final mem = AiService.rag?.memory;
+    if (mem == null) return '小布';
+    try {
+      final p = await mem.userProfile.current();
+      final n = (p.displayName ?? '').trim();
+      return n.isEmpty ? '小布' : n;
+    } catch (_) {
+      return '小布';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final hour = DateTime.now().hour;
@@ -166,21 +191,32 @@ class _Greeting extends StatelessWidget {
         : hour < 18
         ? '下午'
         : '晚上';
+    final now = DateTime.now();
+    final weekday = _weekdays[now.weekday % 7];
+    final dateStr = '$weekday · ${now.month} 月 ${now.day} 日';
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '$greeting，小布',
-          style: const TextStyle(
-            fontSize: BulterFontSize.titleM,
-            fontWeight: BulterFontWeight.semibold,
-            color: BulterColors.textPrimary,
-            height: 1.2,
-          ),
+        // 问候 + 名字（名字从 UserProfile 异步取）
+        FutureBuilder<String>(
+          future: _userName(),
+          builder: (ctx, snap) {
+            final name = snap.data ?? '小布';
+            return Text(
+              '$greeting，$name',
+              style: const TextStyle(
+                fontSize: BulterFontSize.titleM,
+                fontWeight: BulterFontWeight.semibold,
+                color: BulterColors.textPrimary,
+                height: 1.2,
+              ),
+            );
+          },
         ),
         const SizedBox(height: 2),
+        // 动态日期（不再硬编码"周一 · 4 月 8 日"）
         Text(
-          '周一 · 4 月 8 日',
+          dateStr,
           style: const TextStyle(
             fontSize: BulterFontSize.footnote,
             color: BulterColors.textSecondary,

@@ -68,20 +68,6 @@ class ButlerHomePage extends StatelessWidget {
               ),
               const SizedBox(height: BulterSpacing.m),
               _BriefingModuleCard(
-                moduleId: ModuleId.growth,
-                moduleName: '成长',
-                brandColor: BulterColors.growth,
-                icon: 'modules/growth.svg',
-                fallbackHeadline: 'OKR 收尾期：完成《Kotlin 协程》读书',
-                fallbackSubtitle: '把模糊的愿望变成可追踪的目标',
-                fallbackChips: const [
-                  _ChipData('OKR 进度', '50%'),
-                  _ChipData('进行中', '3 项'),
-                ],
-                onTap: _openGrowth,
-              ),
-              const SizedBox(height: BulterSpacing.m),
-              _BriefingModuleCard(
                 moduleId: ModuleId.wealth,
                 moduleName: '财富',
                 brandColor: BulterColors.wealth,
@@ -122,6 +108,8 @@ class ButlerHomePage extends StatelessWidget {
                 ],
                 onTap: _openHealth,
               ),
+              // 注：成长模块（OKR / 学习记录 / 项目）已被合并到上方 AI 洞察大卡中
+              // （按 01-architecture.md §5.2："4 张模块快览卡（关系/财富/思想/健康）"）
             ],
           ),
         ),
