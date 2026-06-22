@@ -441,34 +441,107 @@ lib/
 [AI 对话正常流程]
 ```
 
-### 6.4 自动入库实现（auto_sink.dart）
+### 6.4 场景推理 + 自动入库实现（**主模型多模态**）
 
-**核心思路**：复用 Step 8 的 `Orchestrator.invokeSubAgent(moduleId, query)`，让子 Agent 用工具完成"实际写库"。
+> ⚠️ **重要架构调整**：场景推理 + 写库**由主模型多模态 LLM 完成**，**不是子模型**。
+>
+> - **主模型（多模态 LLM）**：看截图 → 识别场景 → **直接调对应工具**写入数据库
+> - **子模型（文本 LLM）**：仅作为子模块里的信息处理者（如供应简报），**不负责截图归类**
+>
+> **为什么不用子模型**：
+> - 子模型只接受**文本**输入，无法看图
+> - 主模型支持多模态（`image_url` message），能直接理解截图内容
+> - 工具调用（tool_calls）天然适合"看图 → 选工具 → 调工具"流程
+
+#### 实现思路
 
 ```dart
-Future<AutoSinkResult> autoSinkScreenshot({
+Future<SceneInference> inferScreenshot({
   required String thumbPath,
-  required SceneInference inference,
 }) async {
-  // 1) 置信度太低 → 降级
-  if (inference.confidence < 0.5) {
-    return AutoSinkResult.lowConfidence(inference);
-  }
-  // 2) other 类无意义 → 降级
-  if (inference.category == SceneCategory.other) {
-    return AutoSinkResult.unknownCategory(inference);
-  }
-  // 3) 调子 Agent 写库
-  final query = '基于以下截图场景摘要，自动执行建议动作：${inference.summary}\n'
-      'actions: ${inference.actions.map((a) => a.type.name).join(', ')}';
-  final result = await Orchestrator.instance.invokeSubAgent(
-    _moduleFor(inference.category),
-    query,
-    timeout: Duration(seconds: 8),
+  // 1) 准备多模态 messages
+  final imageBase64 = await _readThumbAsBase64(thumbPath);
+  final messages = [
+    {
+      'role': 'system',
+      'content': '你是 Bulter 的视觉助理。看到截图后判断场景，并直接调用对应的工具把信息记录下来。\n'
+          '工具包括：\n'
+          '- relationship.add_contact: 添加联系人\n'
+          '- relationship.add_interaction: 记录互动\n'
+          '- wealth.add_transaction: 记一笔账单\n'
+          '- thought.save: 存为想法\n'
+          '- health.add_record: 记一次健康数据\n'
+          '如果没有合适的工具，回复自然语言建议。',
+    },
+    {
+      'role': 'user',
+      'content': [
+        {'type': 'text', 'text': '请分析这张截图并按需调用工具。'},
+        {
+          'type': 'image_url',
+          'image_url': {'url': 'data:image/jpeg;base64,$imageBase64'},
+        },
+      ],
+    },
+  ];
+
+  // 2) 调主模型（多模态 chat completions）
+  final cfg = ModelRegistry.instance.active;
+  final response = await _httpPost(
+    '${cfg.baseUrl}/${cfg.chatPath}',
+    {
+      'model': cfg.model,
+      'messages': messages,
+      'tools': ToolRegistry.instance.getJsonSchemas(),
+    },
+    cfg.apiKey,
   );
-  return AutoSinkResult.success(result);
+
+  // 3) 解析 tool_calls 并执行
+  final toolCalls = _extractToolCalls(response);
+  final executed = <ToolCallResult>[];
+  for (final tc in toolCalls) {
+    try {
+      final tool = ToolRegistry.instance.getByName(tc.name);
+      final result = await tool.invoke(tc.arguments);
+      executed.add(ToolCallResult(name: tc.name, ok: true, result: result));
+    } catch (e) {
+      executed.add(ToolCallResult(name: tc.name, ok: false, error: e.toString()));
+    }
+  }
+
+  return SceneInference(
+    toolCalls: executed,
+    summary: _extractContent(response),
+  );
 }
 ```
+
+#### 数据流
+
+```
+[截图] → Kotlin takeScreenshot() → Dart 收到 path
+       ↓
+[scene_inference] 读 thumb → base64 编码
+       ↓
+[主模型多模态 LLM] 看图 + 选工具
+       ↓
+[response.tool_calls]
+       ↓
+[ToolRegistry] 顺序执行工具
+  ├── relationship.add_contact  → 联系人入库
+  ├── wealth.add_transaction   → 账单入库
+  ├── thought.save             → 想法入库
+  └── health.add_record        → 健康入库
+       ↓
+[顶部通知] "已记录到 X 模块"
+```
+
+#### 不弹 review 页的理由
+
+- 主模型选工具时已经"理解了"截图内容，置信度由 LLM 内化
+- 用户已经在别的 App 里被打断过一次，**再弹确认页是二次打断**（Bulter 核心原则）
+- 失败时（如 LLM 返回非 JSON / 工具调用失败）→ 自动降级到对话页让用户修正
 
 ---
 
