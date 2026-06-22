@@ -162,12 +162,14 @@ class MemoryInjectionReport {
   final int ragHits;           // RAG 召回条数
   final bool hasWorkingTask;   // 是否含工作记忆
   final int shortTermRounds;   // 短记忆轮数
+  final int crossSessionChars; // Step 11：跨会话上下文字符数（0 = 未启用）
 
   const MemoryInjectionReport({
     required this.profileFields,
     required this.ragHits,
     required this.hasWorkingTask,
     required this.shortTermRounds,
+    this.crossSessionChars = 0,
   });
 }
 

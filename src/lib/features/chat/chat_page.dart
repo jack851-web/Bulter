@@ -3,12 +3,15 @@ import 'dart:convert' show jsonDecode;
 import 'package:flutter/material.dart';
 
 import '../../ai/ai_service.dart';
+import '../../ai/memory/cross_session.dart';
 import '../../ai/memory/memory_manager.dart';
 import '../../ai/memory/short_term.dart';
 import '../../ai/model_registry.dart';
 import '../../components/svg_icon.dart';
 import '../../db/app_database.dart';
 import '../../theme/tokens.dart';
+import 'long_reply_pager.dart';
+import 'typewriter_text.dart';
 
 /// AI 对话页（Step 5：流式 + ReAct 工具 + 二次确认）。
 class ChatPage extends StatefulWidget {
@@ -87,7 +90,9 @@ class _ChatPageState extends State<ChatPage> {
     super.dispose();
   }
 
-  ChatOptions get _opts => const ChatOptions();
+  ChatOptions _buildOptions(String? extraSystemPrompt) {
+    return ChatOptions(extraSystemPrompt: extraSystemPrompt);
+  }
 
   Future<void> _send() async {
     if (_sending) return;
@@ -99,6 +104,26 @@ class _ChatPageState extends State<ChatPage> {
       _controller.clear();
     });
     _scrollToBottom();
+
+    // Step 11：加载跨会话上下文（不阻塞主流程——失败时继续正常 LLM 调用）
+    String? crossSessionCtx;
+    try {
+      crossSessionCtx = await CrossSessionMemory.instance.loadContext();
+      if (crossSessionCtx != null && mounted) {
+        setState(() {
+          _lastInjection = MemoryInjectionReport(
+            profileFields: _profileFieldCount,
+            ragHits: _lastInjection?.ragHits ?? 0,
+            hasWorkingTask:
+                AiService.rag?.memory?.working.hasActiveTask ?? false,
+            shortTermRounds: _memory.rounds,
+            crossSessionChars: crossSessionCtx!.length,
+          );
+        });
+      }
+    } catch (_) {
+      crossSessionCtx = null;
+    }
 
     _memory.append(
       ChatMessage(
@@ -182,7 +207,7 @@ class _ChatPageState extends State<ChatPage> {
           }
         }
       },
-      options: _opts,
+      options: _buildOptions(crossSessionCtx),
     );
   }
 
@@ -313,7 +338,7 @@ class _ChatPageState extends State<ChatPage> {
           });
         }
       },
-      options: _opts,
+      options: _buildOptions(null),
     );
   }
 
@@ -789,6 +814,32 @@ class _AssistantBubble extends StatelessWidget {
     required this.isError,
   });
 
+  /// 渲染正文：
+  /// - **打字机模式**（streaming=true）：用 [TypewriterText] 逐字显示
+  /// - **完成态 + 短文本**（< 2000 字符）：直接 [TypewriterText] streamed=false 显示
+  /// - **完成态 + 长文本**（>= 2000 字符）：用 [LongReplyPager] 自动分页
+  Widget _renderContent() {
+    final style = TextStyle(
+      color: isError ? BulterColors.error : BulterColors.textPrimary,
+      fontSize: BulterFontSize.body,
+      height: 1.45,
+    );
+    if (streaming) {
+      // 流式打字机
+      return TypewriterText(
+        text: content,
+        style: style,
+        streamed: true,
+        charDelayMs: 30,
+      );
+    }
+    // 完成态：短文本直接展示，长文本自动分页
+    if (content.length >= 2000) {
+      return LongReplyPager(fullText: content, style: style);
+    }
+    return TypewriterText(text: content, style: style, streamed: false);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (content.isEmpty && streaming) {
@@ -826,16 +877,7 @@ class _AssistantBubble extends StatelessWidget {
                       )
                     : Border.all(color: BulterColors.divider, width: 0.5),
               ),
-              child: Text(
-                content,
-                style: TextStyle(
-                  color: isError
-                      ? BulterColors.error
-                      : BulterColors.textPrimary,
-                  fontSize: BulterFontSize.body,
-                  height: 1.45,
-                ),
-              ),
+              child: _renderContent(),
             ),
           ),
         ],

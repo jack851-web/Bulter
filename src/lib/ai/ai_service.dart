@@ -109,6 +109,10 @@ class ChatOptions {
   /// 自定义工具注册表（默认用全局 [ToolRegistry.instance]）。
   final ToolRegistry? toolRegistry;
 
+  /// **Step 11**：额外 system prompt（拼接到 buildEnhancedSystemPrompt 之后）。
+  /// 用于跨会话上下文注入（不污染 RAG 注入的 system prompt）。
+  final String? extraSystemPrompt;
+
   const ChatOptions({
     this.temperature,
     this.maxTokens,
@@ -120,6 +124,7 @@ class ChatOptions {
     this.reactLoop = true,
     this.maxReactRounds = 5,
     this.toolRegistry,
+    this.extraSystemPrompt,
   });
 }
 
@@ -212,7 +217,12 @@ class AiService {
     }
 
     // 注入 RAG 上下文（每次都重建，确保最新）
-    final systemPrompt = await buildEnhancedSystemPrompt(memory);
+    var systemPrompt = await buildEnhancedSystemPrompt(memory);
+    // Step 11：附加跨会话上下文（如果有）
+    final extra = options.extraSystemPrompt;
+    if (extra != null && extra.isNotEmpty) {
+      systemPrompt = '$systemPrompt\n\n$extra';
+    }
     if (memory.messages.any((m) => m.role == ChatRole.system)) {
       // 替换已有 system 消息（保留 role / 时间戳）
       final idx = memory.messages.indexWhere((m) => m.role == ChatRole.system);
