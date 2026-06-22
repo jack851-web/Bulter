@@ -34,6 +34,7 @@ part 'app_database.g.dart';
     Contacts,
     Interactions,
     Favors,
+    Promises,
     // 成长模块
     Goals,
     Okrs,
@@ -94,7 +95,7 @@ class AppDatabase extends _$AppDatabase {
   static set I(AppDatabase value) => _instance = value;
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -108,6 +109,10 @@ class AppDatabase extends _$AppDatabase {
       // 老用户数据库没有 screenshots 表——一次性 createTable 会包含全部字段
       if (from < 3) {
         await m.createTable(screenshots);
+      }
+      // Step 13：v3 → v4 一次性加 promises 表（约定管理）
+      if (from < 4) {
+        await m.createTable(promises);
       }
     },
     beforeOpen: (details) async {

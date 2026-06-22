@@ -30,10 +30,10 @@ void main() {
     }
   });
 
-  test('schemaVersion 初值为 3（Step 10 升级）', () {
+  test('schemaVersion 初值为 4（Step 13 升级）', () {
     final db = AppDatabase.forTesting(openInMemoryConnection());
     addTearDown(db.close);
-    expect(db.schemaVersion, 3);
+    expect(db.schemaVersion, 4);
   });
 
   test('首次安装：readSqliteUserVersion = 0', () async {

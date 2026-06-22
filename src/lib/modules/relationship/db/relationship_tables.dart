@@ -51,3 +51,25 @@ class Favors extends Table {
   DateTimeColumn get closedAt => dateTime().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
+
+/// 约定（Step 13）：与某人的某个承诺，到期前 1 天推送提醒。
+///
+/// - `dueAt`：到期日（提醒基于此字段）
+/// - `status`：pending / fulfilled / broken / cancelled
+/// - `reminded`：是否已提醒过（避免重复推）
+@DataClassName('Promise')
+class Promises extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get contactId =>
+      integer().nullable().references(Contacts, #id, onDelete: KeyAction.cascade)();
+  TextColumn get title => text()();
+  TextColumn get description => text().nullable()();
+  DateTimeColumn get dueAt => dateTime()();
+  TextColumn get priority =>
+      text().withDefault(const Constant('normal'))(); // low | normal | high
+  TextColumn get status =>
+      text().withDefault(const Constant('pending'))(); // pending | fulfilled | broken | cancelled
+  BoolColumn get reminded => boolean().withDefault(const Constant(false))();
+  DateTimeColumn get fulfilledAt => dateTime().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}

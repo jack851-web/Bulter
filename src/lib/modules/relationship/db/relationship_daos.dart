@@ -9,7 +9,7 @@ part 'relationship_daos.g.dart';
 ///
 /// 所有 CRUD 集中于 [AppDatabase] 持有的 dao 子树，UI 与工具层只通过
 /// `appDatabase.contactsDao / appDatabase.interactionsDao / appDatabase.favorsDao` 访问。
-@DriftAccessor(tables: [Contacts, Interactions, Favors])
+@DriftAccessor(tables: [Contacts, Interactions, Favors, Promises])
 class RelationshipDao extends DatabaseAccessor<AppDatabase>
     with _$RelationshipDaoMixin {
   RelationshipDao(super.db);
@@ -52,11 +52,10 @@ class RelationshipDao extends DatabaseAccessor<AppDatabase>
 
   /// 全量互动流（用于主页"距上次联系天数"统计）。
   Stream<List<Interaction>> watchAllInteractions() {
-    return (select(interactions)
-          ..orderBy([
-            (i) =>
-                OrderingTerm(expression: i.happenedAt, mode: OrderingMode.desc),
-          ]))
+    return (select(interactions)..orderBy([
+          (i) =>
+              OrderingTerm(expression: i.happenedAt, mode: OrderingMode.desc),
+        ]))
         .watch();
   }
 
@@ -89,4 +88,52 @@ class RelationshipDao extends DatabaseAccessor<AppDatabase>
           .then((_) => id);
   Future<int> deleteFavor(int id) =>
       (delete(favors)..where((f) => f.id.equals(id))).go();
+
+  // —— Promises（Step 13）——
+
+  Future<int> insertPromise(PromisesCompanion p) => into(promises).insert(p);
+  Future<bool> updatePromise(PromisesCompanion p) =>
+      update(promises).replace(p);
+  Future<int> deletePromise(int id) =>
+      (delete(promises)..where((p) => p.id.equals(id))).go();
+
+  /// 待办约定（未完成、未取消）。
+  Stream<List<Promise>> watchPendingPromises() {
+    return (select(promises)
+          ..where((p) => p.status.equals('pending'))
+          ..orderBy([(p) => OrderingTerm(expression: p.dueAt)]))
+        .watch();
+  }
+
+  /// 即将到期（未来 [window] 内的约定，用于提醒）。
+  Future<List<Promise>> promisesDueSoon({
+    Duration window = const Duration(hours: 24),
+  }) async {
+    final now = DateTime.now();
+    final end = now.add(window);
+    return (select(promises)
+          ..where(
+            (p) =>
+                p.status.equals('pending') & p.dueAt.isBetweenValues(now, end),
+          )
+          ..orderBy([(p) => OrderingTerm(expression: p.dueAt)]))
+        .get();
+  }
+
+  /// 标记某约定为已提醒（避免重复推送）。
+  Future<int> markPromisedAsReminded(int id) =>
+      (update(promises)..where((p) => p.id.equals(id)))
+          .write(const PromisesCompanion(reminded: Value(true)))
+          .then((v) => id);
+
+  /// 完成约定。
+  Future<int> fulfillPromise(int id) =>
+      (update(promises)..where((p) => p.id.equals(id)))
+          .write(
+            PromisesCompanion(
+              status: const Value('fulfilled'),
+              fulfilledAt: Value(DateTime.now()),
+            ),
+          )
+          .then((_) => id);
 }

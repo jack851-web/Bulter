@@ -46,17 +46,17 @@ class _CsvImportWizardState extends State<CsvImportWizard> {
           sourceLine: i + 2,
           raw: {
             for (var j = 0; j < _doc!.headers.length; j++)
-              _doc!.headers[j]: _doc!.rows[i].length > j ? _doc!.rows[i][j] : '',
+              _doc!.headers[j]: _doc!.rows[i].length > j
+                  ? _doc!.rows[i][j]
+                  : '',
           },
-          mapping: {
-            for (final m in _mapping) m.columnName: m.field,
-          },
+          mapping: {for (final m in _mapping) m.columnName: m.field},
         ),
     ];
   }
 
   Future<void> _pickFile() async {
-    final result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['csv'],
       allowMultiple: false,
@@ -84,9 +84,15 @@ class _CsvImportWizardState extends State<CsvImportWizard> {
     setState(() {
       _module = newModule;
       if (_doc != null) {
-        _detectedPreset = CsvFieldMapper.detectPreset(_doc!.headers, module: _module);
+        _detectedPreset = CsvFieldMapper.detectPreset(
+          _doc!.headers,
+          module: _module,
+        );
         if (_detectedPreset != null) {
-          _mapping = CsvFieldMapper.loadPresetMapping(_detectedPreset!, _doc!.headers);
+          _mapping = CsvFieldMapper.loadPresetMapping(
+            _detectedPreset!,
+            _doc!.headers,
+          );
         } else {
           _mapping = CsvFieldMapper.autoDetect(_doc!.headers, module: _module);
         }
@@ -108,8 +114,10 @@ class _CsvImportWizardState extends State<CsvImportWizard> {
     if (_doc == null) return;
     final missing = CsvFieldMapper.missingRequired(_module, _mapping);
     if (missing.isNotEmpty) {
-      _snack('必填字段未映射：${missing.map((f) => f.label).join(', ')}',
-          isError: true);
+      _snack(
+        '必填字段未映射：${missing.map((f) => f.label).join(', ')}',
+        isError: true,
+      );
       return;
     }
     setState(() {
@@ -134,19 +142,20 @@ class _CsvImportWizardState extends State<CsvImportWizard> {
   }
 
   void _snack(String msg, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor:
-          isError ? BulterColors.error : BulterColors.textSecondary,
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: isError
+            ? BulterColors.error
+            : BulterColors.textSecondary,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('CSV 批量导入'),
-      ),
+      appBar: AppBar(title: const Text('CSV 批量导入')),
       body: Stepper(
         type: StepperType.vertical,
         currentStep: _step,
@@ -191,10 +200,7 @@ class _CsvImportWizardState extends State<CsvImportWizard> {
     if (details.stepIndex == 1) {
       return Row(
         children: [
-          TextButton(
-            onPressed: details.onStepCancel,
-            child: const Text('上一步'),
-          ),
+          TextButton(onPressed: details.onStepCancel, child: const Text('上一步')),
           const Spacer(),
           FilledButton(
             onPressed: () => setState(() => _step = 2),
@@ -206,10 +212,7 @@ class _CsvImportWizardState extends State<CsvImportWizard> {
     if (details.stepIndex == 2) {
       return Row(
         children: [
-          TextButton(
-            onPressed: details.onStepCancel,
-            child: const Text('上一步'),
-          ),
+          TextButton(onPressed: details.onStepCancel, child: const Text('上一步')),
           const Spacer(),
           FilledButton(
             onPressed: _importing ? null : _runImport,
@@ -244,8 +247,10 @@ class _CsvImportWizardState extends State<CsvImportWizard> {
           const Text('选择要导入的 CSV 文件：'),
           const SizedBox(height: 8),
           if (_file != null)
-            Text('已选择：${_file!.path.split('/').last}',
-                style: const TextStyle(fontWeight: FontWeight.w500)),
+            Text(
+              '已选择：${_file!.path.split('/').last}',
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
           const SizedBox(height: 16),
           const Text(
             '支持格式：财富账单（支付宝 / 微信）、成长学习、思想读后感、健康记录',
@@ -278,7 +283,7 @@ class _CsvImportWizardState extends State<CsvImportWizard> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: BulterColors.accent.withValues(alpha: 0.10),
+              color: BulterColors.butler.withValues(alpha: 0.20),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Row(
@@ -299,8 +304,10 @@ class _CsvImportWizardState extends State<CsvImportWizard> {
               children: [
                 Expanded(
                   flex: 3,
-                  child: Text(m.columnName,
-                      style: const TextStyle(fontWeight: FontWeight.w500)),
+                  child: Text(
+                    m.columnName,
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
                 ),
                 const Icon(Icons.arrow_forward, size: 16),
                 const SizedBox(width: 8),
@@ -312,7 +319,10 @@ class _CsvImportWizardState extends State<CsvImportWizard> {
                     items: [
                       const DropdownMenuItem(
                         value: null,
-                        child: Text('（跳过）', style: TextStyle(color: Colors.grey)),
+                        child: Text(
+                          '（跳过）',
+                          style: TextStyle(color: Colors.grey),
+                        ),
                       ),
                       for (final f in CsvField.values)
                         if (f.isValidFor(_module))
@@ -356,19 +366,23 @@ class _CsvImportWizardState extends State<CsvImportWizard> {
             ],
             rows: [
               for (var i = 0; i < previewRows.length; i++)
-                DataRow(cells: [
-                  for (final h in _doc!.headers)
-                    DataCell(Text(
-                      previewRows[i].raw[h] ?? '',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: validations[i].isValid
-                            ? null
-                            : BulterColors.error,
+                DataRow(
+                  cells: [
+                    for (final h in _doc!.headers)
+                      DataCell(
+                        Text(
+                          previewRows[i].raw[h] ?? '',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: validations[i].isValid
+                                ? null
+                                : BulterColors.error,
+                          ),
+                        ),
                       ),
-                    )),
-                ]),
+                  ],
+                ),
             ],
           ),
         ),

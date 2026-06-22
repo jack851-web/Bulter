@@ -1708,6 +1708,608 @@ class FavorsCompanion extends UpdateCompanion<Favor> {
   }
 }
 
+class $PromisesTable extends Promises with TableInfo<$PromisesTable, Promise> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PromisesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _contactIdMeta = const VerificationMeta(
+    'contactId',
+  );
+  @override
+  late final GeneratedColumn<int> contactId = GeneratedColumn<int>(
+    'contact_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES contacts (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dueAtMeta = const VerificationMeta('dueAt');
+  @override
+  late final GeneratedColumn<DateTime> dueAt = GeneratedColumn<DateTime>(
+    'due_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _priorityMeta = const VerificationMeta(
+    'priority',
+  );
+  @override
+  late final GeneratedColumn<String> priority = GeneratedColumn<String>(
+    'priority',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('normal'),
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _remindedMeta = const VerificationMeta(
+    'reminded',
+  );
+  @override
+  late final GeneratedColumn<bool> reminded = GeneratedColumn<bool>(
+    'reminded',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("reminded" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _fulfilledAtMeta = const VerificationMeta(
+    'fulfilledAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> fulfilledAt = GeneratedColumn<DateTime>(
+    'fulfilled_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    contactId,
+    title,
+    description,
+    dueAt,
+    priority,
+    status,
+    reminded,
+    fulfilledAt,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'promises';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Promise> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('contact_id')) {
+      context.handle(
+        _contactIdMeta,
+        contactId.isAcceptableOrUnknown(data['contact_id']!, _contactIdMeta),
+      );
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('due_at')) {
+      context.handle(
+        _dueAtMeta,
+        dueAt.isAcceptableOrUnknown(data['due_at']!, _dueAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dueAtMeta);
+    }
+    if (data.containsKey('priority')) {
+      context.handle(
+        _priorityMeta,
+        priority.isAcceptableOrUnknown(data['priority']!, _priorityMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('reminded')) {
+      context.handle(
+        _remindedMeta,
+        reminded.isAcceptableOrUnknown(data['reminded']!, _remindedMeta),
+      );
+    }
+    if (data.containsKey('fulfilled_at')) {
+      context.handle(
+        _fulfilledAtMeta,
+        fulfilledAt.isAcceptableOrUnknown(
+          data['fulfilled_at']!,
+          _fulfilledAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Promise map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Promise(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      contactId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}contact_id'],
+      ),
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      ),
+      dueAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}due_at'],
+      )!,
+      priority: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}priority'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      reminded: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}reminded'],
+      )!,
+      fulfilledAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}fulfilled_at'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PromisesTable createAlias(String alias) {
+    return $PromisesTable(attachedDatabase, alias);
+  }
+}
+
+class Promise extends DataClass implements Insertable<Promise> {
+  final int id;
+  final int? contactId;
+  final String title;
+  final String? description;
+  final DateTime dueAt;
+  final String priority;
+  final String status;
+  final bool reminded;
+  final DateTime? fulfilledAt;
+  final DateTime createdAt;
+  const Promise({
+    required this.id,
+    this.contactId,
+    required this.title,
+    this.description,
+    required this.dueAt,
+    required this.priority,
+    required this.status,
+    required this.reminded,
+    this.fulfilledAt,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    if (!nullToAbsent || contactId != null) {
+      map['contact_id'] = Variable<int>(contactId);
+    }
+    map['title'] = Variable<String>(title);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    map['due_at'] = Variable<DateTime>(dueAt);
+    map['priority'] = Variable<String>(priority);
+    map['status'] = Variable<String>(status);
+    map['reminded'] = Variable<bool>(reminded);
+    if (!nullToAbsent || fulfilledAt != null) {
+      map['fulfilled_at'] = Variable<DateTime>(fulfilledAt);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  PromisesCompanion toCompanion(bool nullToAbsent) {
+    return PromisesCompanion(
+      id: Value(id),
+      contactId: contactId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(contactId),
+      title: Value(title),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      dueAt: Value(dueAt),
+      priority: Value(priority),
+      status: Value(status),
+      reminded: Value(reminded),
+      fulfilledAt: fulfilledAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fulfilledAt),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory Promise.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Promise(
+      id: serializer.fromJson<int>(json['id']),
+      contactId: serializer.fromJson<int?>(json['contactId']),
+      title: serializer.fromJson<String>(json['title']),
+      description: serializer.fromJson<String?>(json['description']),
+      dueAt: serializer.fromJson<DateTime>(json['dueAt']),
+      priority: serializer.fromJson<String>(json['priority']),
+      status: serializer.fromJson<String>(json['status']),
+      reminded: serializer.fromJson<bool>(json['reminded']),
+      fulfilledAt: serializer.fromJson<DateTime?>(json['fulfilledAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'contactId': serializer.toJson<int?>(contactId),
+      'title': serializer.toJson<String>(title),
+      'description': serializer.toJson<String?>(description),
+      'dueAt': serializer.toJson<DateTime>(dueAt),
+      'priority': serializer.toJson<String>(priority),
+      'status': serializer.toJson<String>(status),
+      'reminded': serializer.toJson<bool>(reminded),
+      'fulfilledAt': serializer.toJson<DateTime?>(fulfilledAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  Promise copyWith({
+    int? id,
+    Value<int?> contactId = const Value.absent(),
+    String? title,
+    Value<String?> description = const Value.absent(),
+    DateTime? dueAt,
+    String? priority,
+    String? status,
+    bool? reminded,
+    Value<DateTime?> fulfilledAt = const Value.absent(),
+    DateTime? createdAt,
+  }) => Promise(
+    id: id ?? this.id,
+    contactId: contactId.present ? contactId.value : this.contactId,
+    title: title ?? this.title,
+    description: description.present ? description.value : this.description,
+    dueAt: dueAt ?? this.dueAt,
+    priority: priority ?? this.priority,
+    status: status ?? this.status,
+    reminded: reminded ?? this.reminded,
+    fulfilledAt: fulfilledAt.present ? fulfilledAt.value : this.fulfilledAt,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  Promise copyWithCompanion(PromisesCompanion data) {
+    return Promise(
+      id: data.id.present ? data.id.value : this.id,
+      contactId: data.contactId.present ? data.contactId.value : this.contactId,
+      title: data.title.present ? data.title.value : this.title,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      dueAt: data.dueAt.present ? data.dueAt.value : this.dueAt,
+      priority: data.priority.present ? data.priority.value : this.priority,
+      status: data.status.present ? data.status.value : this.status,
+      reminded: data.reminded.present ? data.reminded.value : this.reminded,
+      fulfilledAt: data.fulfilledAt.present
+          ? data.fulfilledAt.value
+          : this.fulfilledAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Promise(')
+          ..write('id: $id, ')
+          ..write('contactId: $contactId, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('dueAt: $dueAt, ')
+          ..write('priority: $priority, ')
+          ..write('status: $status, ')
+          ..write('reminded: $reminded, ')
+          ..write('fulfilledAt: $fulfilledAt, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    contactId,
+    title,
+    description,
+    dueAt,
+    priority,
+    status,
+    reminded,
+    fulfilledAt,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Promise &&
+          other.id == this.id &&
+          other.contactId == this.contactId &&
+          other.title == this.title &&
+          other.description == this.description &&
+          other.dueAt == this.dueAt &&
+          other.priority == this.priority &&
+          other.status == this.status &&
+          other.reminded == this.reminded &&
+          other.fulfilledAt == this.fulfilledAt &&
+          other.createdAt == this.createdAt);
+}
+
+class PromisesCompanion extends UpdateCompanion<Promise> {
+  final Value<int> id;
+  final Value<int?> contactId;
+  final Value<String> title;
+  final Value<String?> description;
+  final Value<DateTime> dueAt;
+  final Value<String> priority;
+  final Value<String> status;
+  final Value<bool> reminded;
+  final Value<DateTime?> fulfilledAt;
+  final Value<DateTime> createdAt;
+  const PromisesCompanion({
+    this.id = const Value.absent(),
+    this.contactId = const Value.absent(),
+    this.title = const Value.absent(),
+    this.description = const Value.absent(),
+    this.dueAt = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.status = const Value.absent(),
+    this.reminded = const Value.absent(),
+    this.fulfilledAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  PromisesCompanion.insert({
+    this.id = const Value.absent(),
+    this.contactId = const Value.absent(),
+    required String title,
+    this.description = const Value.absent(),
+    required DateTime dueAt,
+    this.priority = const Value.absent(),
+    this.status = const Value.absent(),
+    this.reminded = const Value.absent(),
+    this.fulfilledAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  }) : title = Value(title),
+       dueAt = Value(dueAt);
+  static Insertable<Promise> custom({
+    Expression<int>? id,
+    Expression<int>? contactId,
+    Expression<String>? title,
+    Expression<String>? description,
+    Expression<DateTime>? dueAt,
+    Expression<String>? priority,
+    Expression<String>? status,
+    Expression<bool>? reminded,
+    Expression<DateTime>? fulfilledAt,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (contactId != null) 'contact_id': contactId,
+      if (title != null) 'title': title,
+      if (description != null) 'description': description,
+      if (dueAt != null) 'due_at': dueAt,
+      if (priority != null) 'priority': priority,
+      if (status != null) 'status': status,
+      if (reminded != null) 'reminded': reminded,
+      if (fulfilledAt != null) 'fulfilled_at': fulfilledAt,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  PromisesCompanion copyWith({
+    Value<int>? id,
+    Value<int?>? contactId,
+    Value<String>? title,
+    Value<String?>? description,
+    Value<DateTime>? dueAt,
+    Value<String>? priority,
+    Value<String>? status,
+    Value<bool>? reminded,
+    Value<DateTime?>? fulfilledAt,
+    Value<DateTime>? createdAt,
+  }) {
+    return PromisesCompanion(
+      id: id ?? this.id,
+      contactId: contactId ?? this.contactId,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      dueAt: dueAt ?? this.dueAt,
+      priority: priority ?? this.priority,
+      status: status ?? this.status,
+      reminded: reminded ?? this.reminded,
+      fulfilledAt: fulfilledAt ?? this.fulfilledAt,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (contactId.present) {
+      map['contact_id'] = Variable<int>(contactId.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (dueAt.present) {
+      map['due_at'] = Variable<DateTime>(dueAt.value);
+    }
+    if (priority.present) {
+      map['priority'] = Variable<String>(priority.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (reminded.present) {
+      map['reminded'] = Variable<bool>(reminded.value);
+    }
+    if (fulfilledAt.present) {
+      map['fulfilled_at'] = Variable<DateTime>(fulfilledAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PromisesCompanion(')
+          ..write('id: $id, ')
+          ..write('contactId: $contactId, ')
+          ..write('title: $title, ')
+          ..write('description: $description, ')
+          ..write('dueAt: $dueAt, ')
+          ..write('priority: $priority, ')
+          ..write('status: $status, ')
+          ..write('reminded: $reminded, ')
+          ..write('fulfilledAt: $fulfilledAt, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $GoalsTable extends Goals with TableInfo<$GoalsTable, Goal> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -11648,6 +12250,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ContactsTable contacts = $ContactsTable(this);
   late final $InteractionsTable interactions = $InteractionsTable(this);
   late final $FavorsTable favors = $FavorsTable(this);
+  late final $PromisesTable promises = $PromisesTable(this);
   late final $GoalsTable goals = $GoalsTable(this);
   late final $OkrsTable okrs = $OkrsTable(this);
   late final $LearningRecordsTable learningRecords = $LearningRecordsTable(
@@ -11688,6 +12291,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     contacts,
     interactions,
     favors,
+    promises,
     goals,
     okrs,
     learningRecords,
@@ -11724,6 +12328,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('favors', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'contacts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('promises', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
@@ -11816,6 +12427,25 @@ final class $$ContactsTableReferences
     ).filter((f) => f.contactId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_favorsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$PromisesTable, List<Promise>> _promisesRefsTable(
+    _$AppDatabase db,
+  ) => MultiTypedResultKey.fromTable(
+    db.promises,
+    aliasName: $_aliasNameGenerator(db.contacts.id, db.promises.contactId),
+  );
+
+  $$PromisesTableProcessedTableManager get promisesRefs {
+    final manager = $$PromisesTableTableManager(
+      $_db,
+      $_db.promises,
+    ).filter((f) => f.contactId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_promisesRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -11932,6 +12562,31 @@ class $$ContactsTableFilterComposer
           }) => $$FavorsTableFilterComposer(
             $db: $db,
             $table: $db.favors,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> promisesRefs(
+    Expression<bool> Function($$PromisesTableFilterComposer f) f,
+  ) {
+    final $$PromisesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.promises,
+      getReferencedColumn: (t) => t.contactId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PromisesTableFilterComposer(
+            $db: $db,
+            $table: $db.promises,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -12114,6 +12769,31 @@ class $$ContactsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> promisesRefs<T extends Object>(
+    Expression<T> Function($$PromisesTableAnnotationComposer a) f,
+  ) {
+    final $$PromisesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.promises,
+      getReferencedColumn: (t) => t.contactId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PromisesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.promises,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$ContactsTableTableManager
@@ -12129,7 +12809,11 @@ class $$ContactsTableTableManager
           $$ContactsTableUpdateCompanionBuilder,
           (Contact, $$ContactsTableReferences),
           Contact,
-          PrefetchHooks Function({bool interactionsRefs, bool favorsRefs})
+          PrefetchHooks Function({
+            bool interactionsRefs,
+            bool favorsRefs,
+            bool promisesRefs,
+          })
         > {
   $$ContactsTableTableManager(_$AppDatabase db, $ContactsTable table)
     : super(
@@ -12207,12 +12891,17 @@ class $$ContactsTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({interactionsRefs = false, favorsRefs = false}) {
+              ({
+                interactionsRefs = false,
+                favorsRefs = false,
+                promisesRefs = false,
+              }) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (interactionsRefs) db.interactions,
                     if (favorsRefs) db.favors,
+                    if (promisesRefs) db.promises,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -12259,6 +12948,27 @@ class $$ContactsTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (promisesRefs)
+                        await $_getPrefetchedData<
+                          Contact,
+                          $ContactsTable,
+                          Promise
+                        >(
+                          currentTable: table,
+                          referencedTable: $$ContactsTableReferences
+                              ._promisesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$ContactsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).promisesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.contactId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -12279,7 +12989,11 @@ typedef $$ContactsTableProcessedTableManager =
       $$ContactsTableUpdateCompanionBuilder,
       (Contact, $$ContactsTableReferences),
       Contact,
-      PrefetchHooks Function({bool interactionsRefs, bool favorsRefs})
+      PrefetchHooks Function({
+        bool interactionsRefs,
+        bool favorsRefs,
+        bool promisesRefs,
+      })
     >;
 typedef $$InteractionsTableCreateCompanionBuilder =
     InteractionsCompanion Function({
@@ -13023,6 +13737,416 @@ typedef $$FavorsTableProcessedTableManager =
       $$FavorsTableUpdateCompanionBuilder,
       (Favor, $$FavorsTableReferences),
       Favor,
+      PrefetchHooks Function({bool contactId})
+    >;
+typedef $$PromisesTableCreateCompanionBuilder =
+    PromisesCompanion Function({
+      Value<int> id,
+      Value<int?> contactId,
+      required String title,
+      Value<String?> description,
+      required DateTime dueAt,
+      Value<String> priority,
+      Value<String> status,
+      Value<bool> reminded,
+      Value<DateTime?> fulfilledAt,
+      Value<DateTime> createdAt,
+    });
+typedef $$PromisesTableUpdateCompanionBuilder =
+    PromisesCompanion Function({
+      Value<int> id,
+      Value<int?> contactId,
+      Value<String> title,
+      Value<String?> description,
+      Value<DateTime> dueAt,
+      Value<String> priority,
+      Value<String> status,
+      Value<bool> reminded,
+      Value<DateTime?> fulfilledAt,
+      Value<DateTime> createdAt,
+    });
+
+final class $$PromisesTableReferences
+    extends BaseReferences<_$AppDatabase, $PromisesTable, Promise> {
+  $$PromisesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $ContactsTable _contactIdTable(_$AppDatabase db) => db.contacts
+      .createAlias($_aliasNameGenerator(db.promises.contactId, db.contacts.id));
+
+  $$ContactsTableProcessedTableManager? get contactId {
+    final $_column = $_itemColumn<int>('contact_id');
+    if ($_column == null) return null;
+    final manager = $$ContactsTableTableManager(
+      $_db,
+      $_db.contacts,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contactIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$PromisesTableFilterComposer
+    extends Composer<_$AppDatabase, $PromisesTable> {
+  $$PromisesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get dueAt => $composableBuilder(
+    column: $table.dueAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get reminded => $composableBuilder(
+    column: $table.reminded,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get fulfilledAt => $composableBuilder(
+    column: $table.fulfilledAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$ContactsTableFilterComposer get contactId {
+    final $$ContactsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableFilterComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PromisesTableOrderingComposer
+    extends Composer<_$AppDatabase, $PromisesTable> {
+  $$PromisesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get dueAt => $composableBuilder(
+    column: $table.dueAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get reminded => $composableBuilder(
+    column: $table.reminded,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get fulfilledAt => $composableBuilder(
+    column: $table.fulfilledAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$ContactsTableOrderingComposer get contactId {
+    final $$ContactsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableOrderingComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PromisesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PromisesTable> {
+  $$PromisesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get dueAt =>
+      $composableBuilder(column: $table.dueAt, builder: (column) => column);
+
+  GeneratedColumn<String> get priority =>
+      $composableBuilder(column: $table.priority, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<bool> get reminded =>
+      $composableBuilder(column: $table.reminded, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get fulfilledAt => $composableBuilder(
+    column: $table.fulfilledAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$ContactsTableAnnotationComposer get contactId {
+    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.contactId,
+      referencedTable: $db.contacts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ContactsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.contacts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$PromisesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PromisesTable,
+          Promise,
+          $$PromisesTableFilterComposer,
+          $$PromisesTableOrderingComposer,
+          $$PromisesTableAnnotationComposer,
+          $$PromisesTableCreateCompanionBuilder,
+          $$PromisesTableUpdateCompanionBuilder,
+          (Promise, $$PromisesTableReferences),
+          Promise,
+          PrefetchHooks Function({bool contactId})
+        > {
+  $$PromisesTableTableManager(_$AppDatabase db, $PromisesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PromisesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PromisesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PromisesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int?> contactId = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String?> description = const Value.absent(),
+                Value<DateTime> dueAt = const Value.absent(),
+                Value<String> priority = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<bool> reminded = const Value.absent(),
+                Value<DateTime?> fulfilledAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => PromisesCompanion(
+                id: id,
+                contactId: contactId,
+                title: title,
+                description: description,
+                dueAt: dueAt,
+                priority: priority,
+                status: status,
+                reminded: reminded,
+                fulfilledAt: fulfilledAt,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int?> contactId = const Value.absent(),
+                required String title,
+                Value<String?> description = const Value.absent(),
+                required DateTime dueAt,
+                Value<String> priority = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<bool> reminded = const Value.absent(),
+                Value<DateTime?> fulfilledAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => PromisesCompanion.insert(
+                id: id,
+                contactId: contactId,
+                title: title,
+                description: description,
+                dueAt: dueAt,
+                priority: priority,
+                status: status,
+                reminded: reminded,
+                fulfilledAt: fulfilledAt,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$PromisesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({contactId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (contactId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.contactId,
+                                referencedTable: $$PromisesTableReferences
+                                    ._contactIdTable(db),
+                                referencedColumn: $$PromisesTableReferences
+                                    ._contactIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$PromisesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PromisesTable,
+      Promise,
+      $$PromisesTableFilterComposer,
+      $$PromisesTableOrderingComposer,
+      $$PromisesTableAnnotationComposer,
+      $$PromisesTableCreateCompanionBuilder,
+      $$PromisesTableUpdateCompanionBuilder,
+      (Promise, $$PromisesTableReferences),
+      Promise,
       PrefetchHooks Function({bool contactId})
     >;
 typedef $$GoalsTableCreateCompanionBuilder =
@@ -18668,6 +19792,8 @@ class $AppDatabaseManager {
       $$InteractionsTableTableManager(_db, _db.interactions);
   $$FavorsTableTableManager get favors =>
       $$FavorsTableTableManager(_db, _db.favors);
+  $$PromisesTableTableManager get promises =>
+      $$PromisesTableTableManager(_db, _db.promises);
   $$GoalsTableTableManager get goals =>
       $$GoalsTableTableManager(_db, _db.goals);
   $$OkrsTableTableManager get okrs => $$OkrsTableTableManager(_db, _db.okrs);

@@ -7,4 +7,5 @@ mixin _$RelationshipDaoMixin on DatabaseAccessor<AppDatabase> {
   $ContactsTable get contacts => attachedDatabase.contacts;
   $InteractionsTable get interactions => attachedDatabase.interactions;
   $FavorsTable get favors => attachedDatabase.favors;
+  $PromisesTable get promises => attachedDatabase.promises;
 }
