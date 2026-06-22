@@ -1,6 +1,7 @@
 import 'dart:convert' show jsonDecode;
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../ai/ai_service.dart';
 import '../../ai/memory/cross_session.dart';

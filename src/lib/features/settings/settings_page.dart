@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../ai/ai_service.dart';
 import '../../ai/model_registry.dart';
 import '../../components/bulter_scaffold.dart';
 import '../../components/svg_icon.dart';
@@ -88,13 +89,9 @@ class SettingsPage extends StatelessWidget {
               _Item(
                 icon: 'common/download.svg',
                 title: '导出数据',
-                subtitle: 'Step 20 接入',
+                subtitle: '即将推出',
               ),
-              _Item(
-                icon: 'common/upload.svg',
-                title: '导入数据',
-                subtitle: 'Step 20 接入',
-              ),
+              _Item(icon: 'common/upload.svg', title: '导入数据', subtitle: '即将推出'),
             ],
           ),
           const SizedBox(height: BulterSpacing.l),
@@ -114,40 +111,76 @@ class SettingsPage extends StatelessWidget {
   }
 
   void _push(BuildContext context, Widget page) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => page),
-    );
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => page));
   }
 
   static String _iconFor(String id) => switch (id) {
-        'relationship' => 'modules/relationship.svg',
-        'growth' => 'modules/growth.svg',
-        'wealth' => 'modules/wealth.svg',
-        'thought' => 'modules/thought.svg',
-        'health' => 'modules/health.svg',
-        'memory' => 'modules/memory.svg',
-        'demo' => 'common/circle.svg',
-        _ => 'common/circle.svg',
-      };
+    'relationship' => 'modules/relationship.svg',
+    'growth' => 'modules/growth.svg',
+    'wealth' => 'modules/wealth.svg',
+    'thought' => 'modules/thought.svg',
+    'health' => 'modules/health.svg',
+    'memory' => 'modules/memory.svg',
+    'demo' => 'common/circle.svg',
+    _ => 'common/circle.svg',
+  };
 
   static String _subtitleFor(String id) => switch (id) {
-        'relationship' => '人脉 · 关怀',
-        'growth' => '目标 · 学习',
-        'wealth' => '账户 · 流水',
-        'thought' => '想法 · 信件',
-        'health' => '记录 · 体检',
-        'memory' => 'RAG 语义记忆',
-        'demo' => '模块化验证',
-        _ => '',
-      };
+    'relationship' => '人脉 · 关怀',
+    'growth' => '目标 · 学习',
+    'wealth' => '账户 · 流水',
+    'thought' => '想法 · 信件',
+    'health' => '记录 · 体检',
+    'memory' => 'RAG 语义记忆',
+    'demo' => '模块化验证',
+    _ => '',
+  };
 }
 
 // ============================================================
 // 用户卡
 // ============================================================
 
-class _UserCard extends StatelessWidget {
+class _UserCard extends StatefulWidget {
   const _UserCard();
+
+  @override
+  State<_UserCard> createState() => _UserCardState();
+}
+
+class _UserCardState extends State<_UserCard> {
+  late Future<_UserInfo> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _load();
+  }
+
+  Future<_UserInfo> _load() async {
+    final mem = AiService.rag?.memory;
+    if (mem == null) {
+      return const _UserInfo(
+        displayName: null,
+        occupation: null,
+        location: null,
+      );
+    }
+    try {
+      final p = await mem.userProfile.current();
+      return _UserInfo(
+        displayName: p.displayName,
+        occupation: p.occupation,
+        location: p.location,
+      );
+    } catch (_) {
+      return const _UserInfo(
+        displayName: null,
+        occupation: null,
+        location: null,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -156,71 +189,114 @@ class _UserCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(BulterRadius.l),
       child: InkWell(
         borderRadius: BorderRadius.circular(BulterRadius.l),
-        onTap: () => context.pushNamed('settings.profile'),
+        onTap: () async {
+          await context.pushNamed('settings.profile');
+          if (mounted) setState(() => _future = _load());
+        },
         child: Container(
           padding: const EdgeInsets.all(BulterSpacing.l),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(BulterRadius.l),
             border: Border.all(color: BulterColors.divider, width: 0.5),
           ),
-          child: Row(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [BulterColors.relationship, BulterColors.butler],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(BulterRadius.l),
-                ),
-                alignment: Alignment.center,
-                child: const Text(
-                  '小',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: BulterFontWeight.heavy,
-                    color: BulterColors.ctaText,
-                  ),
-                ),
-              ),
-              const SizedBox(width: BulterSpacing.l),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text(
-                      '小明',
-                      style: TextStyle(
-                        fontSize: BulterFontSize.titleS,
-                        fontWeight: BulterFontWeight.semibold,
-                        color: BulterColors.textPrimary,
+          child: FutureBuilder<_UserInfo>(
+            future: _future,
+            builder: (ctx, snap) {
+              final info = snap.data;
+              final name = info?.displayName?.trim().isNotEmpty == true
+                  ? info!.displayName!.trim()
+                  : '小明';
+              final bio = _buildBio(info);
+              final firstChar = name.isEmpty ? '?' : name.characters.first;
+              return Row(
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [
+                          BulterColors.relationship,
+                          BulterColors.butler,
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(BulterRadius.l),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      firstChar,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: BulterFontWeight.heavy,
+                        color: BulterColors.ctaText,
                       ),
                     ),
-                    SizedBox(height: 2),
-                    Text(
-                      'AI 助理 / 经营咖啡馆 / 上海',
-                      style: TextStyle(
-                        fontSize: BulterFontSize.footnote,
-                        color: BulterColors.textSecondary,
-                      ),
+                  ),
+                  const SizedBox(width: BulterSpacing.l),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          style: const TextStyle(
+                            fontSize: BulterFontSize.titleS,
+                            fontWeight: BulterFontWeight.semibold,
+                            color: BulterColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          bio,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: BulterFontSize.footnote,
+                            color: BulterColors.textSecondary,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-              const SvgIcon(
-                'common/chevron-right.svg',
-                size: 18,
-                color: BulterColors.textTertiary,
-              ),
-            ],
+                  ),
+                  const SvgIcon(
+                    'common/chevron-right.svg',
+                    size: 18,
+                    color: BulterColors.textTertiary,
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
     );
   }
+
+  /// 拼简介：occupation / location 任一非空 → "occupation · location"。
+  /// 都为空 → 显示提示让用户去设置。
+  String _buildBio(_UserInfo? info) {
+    if (info == null) return '点击右上角"用户画像"完善信息';
+    final parts = <String>[];
+    final occ = info.occupation?.trim();
+    final loc = info.location?.trim();
+    if (occ != null && occ.isNotEmpty) parts.add(occ);
+    if (loc != null && loc.isNotEmpty) parts.add(loc);
+    if (parts.isEmpty) return '点击右上角"用户画像"完善信息';
+    return parts.join(' · ');
+  }
+}
+
+class _UserInfo {
+  final String? displayName;
+  final String? occupation;
+  final String? location;
+  const _UserInfo({
+    required this.displayName,
+    required this.occupation,
+    required this.location,
+  });
 }
 
 // ============================================================

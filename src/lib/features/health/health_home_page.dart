@@ -61,23 +61,17 @@ class _RecordsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: BulterColors.canvas,
-      body: StreamListView<HealthRecord>(
+    // 注：AppShell 已提供 Scaffold + FAB（AI 入口 + 模块 quickAdd），
+    // 这里只放列表内容；记一笔功能通过 AppShell 顶栏 + 按钮调用 openAddRecord。
+    return Container(
+      color: BulterColors.canvas,
+      child: StreamListView<HealthRecord>(
         stream: AppDatabase.I.healthDao.watchRecentRecords(),
         brandColor: BulterColors.health,
         emptyTitle: '还没有健康记录',
         emptyHint: '追踪心情、睡眠、运动，看见身体的变化',
         emptyIconName: 'modules/health.svg',
         itemBuilder: (context, r, idx) => _RecordRow(record: r),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => HealthHomePage.openAddRecord(context),
-        backgroundColor: BulterColors.cta,
-        foregroundColor: BulterColors.ctaText,
-        elevation: 0,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('记一笔'),
       ),
     );
   }
@@ -230,9 +224,10 @@ class _ReportsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: BulterColors.canvas,
-      body: StreamBuilder<List<CheckupReport>>(
+    // 注：AppShell 已提供 Scaffold，这里只放内容。
+    return Container(
+      color: BulterColors.canvas,
+      child: StreamBuilder<List<CheckupReport>>(
         stream: AppDatabase.I.healthDao.watchReports(),
         builder: (context, snap) {
           final reports = snap.data ?? const <CheckupReport>[];
@@ -258,7 +253,7 @@ class _ReportsTab extends StatelessWidget {
                     ),
                     SizedBox(height: BulterSpacing.s),
                     Text(
-                      '从浮窗截图或 AI 对话导入体检报告\n（暂未启用，敬请期待）',
+                      '从浮窗截图或 AI 对话导入体检报告\n（即将推出）',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: BulterFontSize.footnote,

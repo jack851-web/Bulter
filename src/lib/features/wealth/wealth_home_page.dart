@@ -24,37 +24,28 @@ class WealthHomePage extends StatelessWidget {
       stream: AppDatabase.I.wealthDao.watchAccounts(),
       builder: (context, accSnap) {
         final accounts = accSnap.data ?? const <Account>[];
-        return Scaffold(
-          backgroundColor: BulterColors.canvas,
-          body: ListView(
-            padding: const EdgeInsets.fromLTRB(
-              BulterSpacing.l,
-              BulterSpacing.l,
-              BulterSpacing.l,
-              BulterSpacing.huge,
-            ),
-            children: [
-              _BalanceHero(accounts: accounts),
-              const SizedBox(height: BulterSpacing.l),
-              _ActionRow(accounts: accounts),
-              const SizedBox(height: BulterSpacing.l),
-              _SectionTitle('账户 / 预算'),
-              const SizedBox(height: BulterSpacing.s),
-              _AccountsList(accounts: accounts),
-              const SizedBox(height: BulterSpacing.l),
-              _SectionTitle('最近流水'),
-              const SizedBox(height: BulterSpacing.s),
-              _RecentTransactions(accounts: accounts),
-            ],
+        // 注：AppShell 已提供 Scaffold + FAB（AI 入口 + 模块 quickAdd），
+        // 这里只放列表内容；记一笔功能由 AppShell 顶栏 + 按钮调用 openAddTransaction。
+        return ListView(
+          padding: const EdgeInsets.fromLTRB(
+            BulterSpacing.l,
+            BulterSpacing.l,
+            BulterSpacing.l,
+            BulterSpacing.huge,
           ),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => openAddTransaction(context),
-            backgroundColor: BulterColors.cta,
-            foregroundColor: BulterColors.ctaText,
-            elevation: 0,
-            icon: const Icon(Icons.add_rounded),
-            label: const Text('记一笔'),
-          ),
+          children: [
+            _BalanceHero(accounts: accounts),
+            const SizedBox(height: BulterSpacing.l),
+            _ActionRow(accounts: accounts),
+            const SizedBox(height: BulterSpacing.l),
+            _SectionTitle('账户 / 预算'),
+            const SizedBox(height: BulterSpacing.s),
+            _AccountsList(accounts: accounts),
+            const SizedBox(height: BulterSpacing.l),
+            _SectionTitle('最近流水'),
+            const SizedBox(height: BulterSpacing.s),
+            _RecentTransactions(accounts: accounts),
+          ],
         );
       },
     );

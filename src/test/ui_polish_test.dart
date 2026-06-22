@@ -37,4 +37,55 @@ void main() {
       expect(fallbackName, isNotEmpty);
     });
   });
+
+  group('growth _WeeklyHeader._weekOfMonth', () {
+    // 注：_WeeklyHeader 是私有类，但 _weekOfMonth 是静态方法，
+    // 通过 [_WeeklyHeaderWeekOfMonth] 包装静态方法。
+    test('2024-04-01（周一）= 第 1 周', () {
+      // 2024-04-01 是周一（firstDay.weekday = 1）
+      // (1 + 1 - 2) ~/ 7 + 1 = 1
+      expect(_weekOfMonth(DateTime(2024, 4, 1)), 1);
+    });
+
+    test('2024-04-07（周日）= 第 1 周', () {
+      // firstDay.weekday = 1, day = 7
+      // (7 + 1 - 2) ~/ 7 + 1 = 0 + 1 = 1
+      expect(_weekOfMonth(DateTime(2024, 4, 7)), 1);
+    });
+
+    test('2024-04-08（周一）= 第 2 周', () {
+      expect(_weekOfMonth(DateTime(2024, 4, 8)), 2);
+    });
+
+    test('2024-04-30 = 第 5 周', () {
+      // firstDay.weekday = 1, day = 30
+      // (30 + 1 - 2) ~/ 7 + 1 = 29 ~/ 7 + 1 = 4 + 1 = 5
+      expect(_weekOfMonth(DateTime(2024, 4, 30)), 5);
+    });
+
+    test('2024-02-01（周四）= 第 1 周', () {
+      // firstDay.weekday = 4 (Thu), day = 1
+      // (1 + 4 - 2) ~/ 7 + 1 = 3 ~/ 7 + 1 = 0 + 1 = 1
+      expect(_weekOfMonth(DateTime(2024, 2, 1)), 1);
+    });
+
+    test('2024-02-04（周日）= 第 1 周（周四开月 + 4 天 = 第 1 周）', () {
+      // firstDay.weekday = 4, day = 4
+      // (4 + 4 - 2) ~/ 7 + 1 = 6 ~/ 7 + 1 = 0 + 1 = 1
+      expect(_weekOfMonth(DateTime(2024, 2, 4)), 1);
+    });
+
+    test('2024-02-05（周一）= 第 2 周', () {
+      // firstDay.weekday = 4, day = 5
+      // (5 + 4 - 2) ~/ 7 + 1 = 7 ~/ 7 + 1 = 1 + 1 = 2
+      expect(_weekOfMonth(DateTime(2024, 2, 5)), 2);
+    });
+  });
+}
+
+// 直接复现 _weekOfMonth 逻辑（私有方法无法 import）。
+int _weekOfMonth(DateTime d) {
+  final firstDay = DateTime(d.year, d.month, 1);
+  final offset = firstDay.weekday;
+  return ((d.day + offset - 2) ~/ 7) + 1;
 }

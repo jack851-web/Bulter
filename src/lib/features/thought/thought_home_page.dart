@@ -15,35 +15,26 @@ class ThoughtHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: BulterColors.canvas,
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(
-          BulterSpacing.l,
-          BulterSpacing.l,
-          BulterSpacing.l,
-          BulterSpacing.huge,
-        ),
-        children: const [
-          _AiSummaryCard(),
-          SizedBox(height: BulterSpacing.l),
-          _SectionTitle('想法 · 本周'),
-          SizedBox(height: BulterSpacing.s),
-          _ThoughtCompactList(),
-          SizedBox(height: BulterSpacing.l),
-          _SectionTitle('信件 · 待拆'),
-          SizedBox(height: BulterSpacing.s),
-          _LetterCompactList(),
-        ],
+    // 注：AppShell 已提供 Scaffold + FAB（AI 入口 + 模块 quickAdd），
+    // 这里只放列表内容；记一条功能由 AppShell 顶栏 + 按钮调用 openAddThought。
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(
+        BulterSpacing.l,
+        BulterSpacing.l,
+        BulterSpacing.l,
+        BulterSpacing.huge,
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => openAddThought(context),
-        backgroundColor: BulterColors.cta,
-        foregroundColor: BulterColors.ctaText,
-        elevation: 0,
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('记一条'),
-      ),
+      children: const [
+        _AiSummaryCard(),
+        SizedBox(height: BulterSpacing.l),
+        _SectionTitle('想法 · 本周'),
+        SizedBox(height: BulterSpacing.s),
+        _ThoughtCompactList(),
+        SizedBox(height: BulterSpacing.l),
+        _SectionTitle('信件 · 待拆'),
+        SizedBox(height: BulterSpacing.s),
+        _LetterCompactList(),
+      ],
     );
   }
 

@@ -69,6 +69,15 @@ class GrowthHomePage extends StatelessWidget {
 class _WeeklyHeader extends StatelessWidget {
   const _WeeklyHeader();
 
+  /// 计算 [d] 是本月的第几周（基于 1 号是周几 + 当前日期）。
+  ///
+  /// 与 [DateTime.weekday]（1=Mon..7=Sun）不同，**这是月内周序号**。
+  static int _weekOfMonth(DateTime d) {
+    final firstDay = DateTime(d.year, d.month, 1);
+    final offset = firstDay.weekday; // 1 号是周几（1-7）
+    return ((d.day + offset - 2) ~/ 7) + 1;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -93,7 +102,7 @@ class _WeeklyHeader extends StatelessWidget {
         ),
         const SizedBox(width: BulterSpacing.s),
         Text(
-          '第 ${DateTime.now().weekday} 周',
+          '第 ${_weekOfMonth(DateTime.now())} 周',
           style: const TextStyle(
             fontSize: BulterFontSize.body,
             color: BulterColors.textSecondary,

@@ -646,10 +646,7 @@ class _MoreMenuSheet extends StatelessWidget {
 
   void _exportData(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('导出功能 Step 18 接入（数据迁移）'),
-        duration: Duration(seconds: 2),
-      ),
+      const SnackBar(content: Text('导出功能即将推出'), duration: Duration(seconds: 2)),
     );
   }
 }
