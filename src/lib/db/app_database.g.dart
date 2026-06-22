@@ -10472,6 +10472,881 @@ class UserProfilesCompanion extends UpdateCompanion<UserProfile> {
   }
 }
 
+class $ScreenshotsTable extends Screenshots
+    with TableInfo<$ScreenshotsTable, Screenshot> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ScreenshotsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _thumbPathMeta = const VerificationMeta(
+    'thumbPath',
+  );
+  @override
+  late final GeneratedColumn<String> thumbPath = GeneratedColumn<String>(
+    'thumb_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _packageNameMeta = const VerificationMeta(
+    'packageName',
+  );
+  @override
+  late final GeneratedColumn<String> packageName = GeneratedColumn<String>(
+    'package_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _windowTitleMeta = const VerificationMeta(
+    'windowTitle',
+  );
+  @override
+  late final GeneratedColumn<String> windowTitle = GeneratedColumn<String>(
+    'window_title',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _textPreviewMeta = const VerificationMeta(
+    'textPreview',
+  );
+  @override
+  late final GeneratedColumn<String> textPreview = GeneratedColumn<String>(
+    'text_preview',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _inferredCategoryMeta = const VerificationMeta(
+    'inferredCategory',
+  );
+  @override
+  late final GeneratedColumn<String> inferredCategory = GeneratedColumn<String>(
+    'inferred_category',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _inferredConfidenceMeta =
+      const VerificationMeta('inferredConfidence');
+  @override
+  late final GeneratedColumn<double> inferredConfidence =
+      GeneratedColumn<double>(
+        'inferred_confidence',
+        aliasedName,
+        true,
+        type: DriftSqlType.double,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _inferredSummaryMeta = const VerificationMeta(
+    'inferredSummary',
+  );
+  @override
+  late final GeneratedColumn<String> inferredSummary = GeneratedColumn<String>(
+    'inferred_summary',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _inferredJsonMeta = const VerificationMeta(
+    'inferredJson',
+  );
+  @override
+  late final GeneratedColumn<String> inferredJson = GeneratedColumn<String>(
+    'inferred_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _userCategoryMeta = const VerificationMeta(
+    'userCategory',
+  );
+  @override
+  late final GeneratedColumn<String> userCategory = GeneratedColumn<String>(
+    'user_category',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _userActionsJsonMeta = const VerificationMeta(
+    'userActionsJson',
+  );
+  @override
+  late final GeneratedColumn<String> userActionsJson = GeneratedColumn<String>(
+    'user_actions_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _reviewedAtMeta = const VerificationMeta(
+    'reviewedAt',
+  );
+  @override
+  late final GeneratedColumn<int> reviewedAt = GeneratedColumn<int>(
+    'reviewed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<int> createdAt = GeneratedColumn<int>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _autoSinkStatusMeta = const VerificationMeta(
+    'autoSinkStatus',
+  );
+  @override
+  late final GeneratedColumn<String> autoSinkStatus = GeneratedColumn<String>(
+    'auto_sink_status',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    thumbPath,
+    packageName,
+    windowTitle,
+    textPreview,
+    inferredCategory,
+    inferredConfidence,
+    inferredSummary,
+    inferredJson,
+    userCategory,
+    userActionsJson,
+    reviewedAt,
+    createdAt,
+    autoSinkStatus,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'screenshots';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<Screenshot> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('thumb_path')) {
+      context.handle(
+        _thumbPathMeta,
+        thumbPath.isAcceptableOrUnknown(data['thumb_path']!, _thumbPathMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_thumbPathMeta);
+    }
+    if (data.containsKey('package_name')) {
+      context.handle(
+        _packageNameMeta,
+        packageName.isAcceptableOrUnknown(
+          data['package_name']!,
+          _packageNameMeta,
+        ),
+      );
+    }
+    if (data.containsKey('window_title')) {
+      context.handle(
+        _windowTitleMeta,
+        windowTitle.isAcceptableOrUnknown(
+          data['window_title']!,
+          _windowTitleMeta,
+        ),
+      );
+    }
+    if (data.containsKey('text_preview')) {
+      context.handle(
+        _textPreviewMeta,
+        textPreview.isAcceptableOrUnknown(
+          data['text_preview']!,
+          _textPreviewMeta,
+        ),
+      );
+    }
+    if (data.containsKey('inferred_category')) {
+      context.handle(
+        _inferredCategoryMeta,
+        inferredCategory.isAcceptableOrUnknown(
+          data['inferred_category']!,
+          _inferredCategoryMeta,
+        ),
+      );
+    }
+    if (data.containsKey('inferred_confidence')) {
+      context.handle(
+        _inferredConfidenceMeta,
+        inferredConfidence.isAcceptableOrUnknown(
+          data['inferred_confidence']!,
+          _inferredConfidenceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('inferred_summary')) {
+      context.handle(
+        _inferredSummaryMeta,
+        inferredSummary.isAcceptableOrUnknown(
+          data['inferred_summary']!,
+          _inferredSummaryMeta,
+        ),
+      );
+    }
+    if (data.containsKey('inferred_json')) {
+      context.handle(
+        _inferredJsonMeta,
+        inferredJson.isAcceptableOrUnknown(
+          data['inferred_json']!,
+          _inferredJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('user_category')) {
+      context.handle(
+        _userCategoryMeta,
+        userCategory.isAcceptableOrUnknown(
+          data['user_category']!,
+          _userCategoryMeta,
+        ),
+      );
+    }
+    if (data.containsKey('user_actions_json')) {
+      context.handle(
+        _userActionsJsonMeta,
+        userActionsJson.isAcceptableOrUnknown(
+          data['user_actions_json']!,
+          _userActionsJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('reviewed_at')) {
+      context.handle(
+        _reviewedAtMeta,
+        reviewedAt.isAcceptableOrUnknown(data['reviewed_at']!, _reviewedAtMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('auto_sink_status')) {
+      context.handle(
+        _autoSinkStatusMeta,
+        autoSinkStatus.isAcceptableOrUnknown(
+          data['auto_sink_status']!,
+          _autoSinkStatusMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Screenshot map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Screenshot(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      thumbPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}thumb_path'],
+      )!,
+      packageName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}package_name'],
+      ),
+      windowTitle: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}window_title'],
+      ),
+      textPreview: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}text_preview'],
+      ),
+      inferredCategory: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}inferred_category'],
+      ),
+      inferredConfidence: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}inferred_confidence'],
+      ),
+      inferredSummary: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}inferred_summary'],
+      ),
+      inferredJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}inferred_json'],
+      ),
+      userCategory: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_category'],
+      ),
+      userActionsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_actions_json'],
+      ),
+      reviewedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}reviewed_at'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}created_at'],
+      )!,
+      autoSinkStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}auto_sink_status'],
+      ),
+    );
+  }
+
+  @override
+  $ScreenshotsTable createAlias(String alias) {
+    return $ScreenshotsTable(attachedDatabase, alias);
+  }
+}
+
+class Screenshot extends DataClass implements Insertable<Screenshot> {
+  final int id;
+  final String thumbPath;
+  final String? packageName;
+  final String? windowTitle;
+  final String? textPreview;
+  final String? inferredCategory;
+  final double? inferredConfidence;
+  final String? inferredSummary;
+  final String? inferredJson;
+
+  /// 用户最终归类（relationship / growth / wealth / thought / health / other / chat / bill / article / report）
+  final String? userCategory;
+
+  /// 用户执行的动作列表 JSON（`[{"type":"add_contact","name":"..."}, ...]`）
+  final String? userActionsJson;
+
+  /// 确认时间（epoch ms）。null = 还没确认（pending 状态）。
+  final int? reviewedAt;
+
+  /// 创建时间（epoch ms）。Drift 不自动管理时间戳（与全库一致）。
+  final int createdAt;
+
+  /// Step 10：自动入库状态（success / no_tools_called / no_api_key / dio_xxx / ...）。
+  final String? autoSinkStatus;
+  const Screenshot({
+    required this.id,
+    required this.thumbPath,
+    this.packageName,
+    this.windowTitle,
+    this.textPreview,
+    this.inferredCategory,
+    this.inferredConfidence,
+    this.inferredSummary,
+    this.inferredJson,
+    this.userCategory,
+    this.userActionsJson,
+    this.reviewedAt,
+    required this.createdAt,
+    this.autoSinkStatus,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['thumb_path'] = Variable<String>(thumbPath);
+    if (!nullToAbsent || packageName != null) {
+      map['package_name'] = Variable<String>(packageName);
+    }
+    if (!nullToAbsent || windowTitle != null) {
+      map['window_title'] = Variable<String>(windowTitle);
+    }
+    if (!nullToAbsent || textPreview != null) {
+      map['text_preview'] = Variable<String>(textPreview);
+    }
+    if (!nullToAbsent || inferredCategory != null) {
+      map['inferred_category'] = Variable<String>(inferredCategory);
+    }
+    if (!nullToAbsent || inferredConfidence != null) {
+      map['inferred_confidence'] = Variable<double>(inferredConfidence);
+    }
+    if (!nullToAbsent || inferredSummary != null) {
+      map['inferred_summary'] = Variable<String>(inferredSummary);
+    }
+    if (!nullToAbsent || inferredJson != null) {
+      map['inferred_json'] = Variable<String>(inferredJson);
+    }
+    if (!nullToAbsent || userCategory != null) {
+      map['user_category'] = Variable<String>(userCategory);
+    }
+    if (!nullToAbsent || userActionsJson != null) {
+      map['user_actions_json'] = Variable<String>(userActionsJson);
+    }
+    if (!nullToAbsent || reviewedAt != null) {
+      map['reviewed_at'] = Variable<int>(reviewedAt);
+    }
+    map['created_at'] = Variable<int>(createdAt);
+    if (!nullToAbsent || autoSinkStatus != null) {
+      map['auto_sink_status'] = Variable<String>(autoSinkStatus);
+    }
+    return map;
+  }
+
+  ScreenshotsCompanion toCompanion(bool nullToAbsent) {
+    return ScreenshotsCompanion(
+      id: Value(id),
+      thumbPath: Value(thumbPath),
+      packageName: packageName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(packageName),
+      windowTitle: windowTitle == null && nullToAbsent
+          ? const Value.absent()
+          : Value(windowTitle),
+      textPreview: textPreview == null && nullToAbsent
+          ? const Value.absent()
+          : Value(textPreview),
+      inferredCategory: inferredCategory == null && nullToAbsent
+          ? const Value.absent()
+          : Value(inferredCategory),
+      inferredConfidence: inferredConfidence == null && nullToAbsent
+          ? const Value.absent()
+          : Value(inferredConfidence),
+      inferredSummary: inferredSummary == null && nullToAbsent
+          ? const Value.absent()
+          : Value(inferredSummary),
+      inferredJson: inferredJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(inferredJson),
+      userCategory: userCategory == null && nullToAbsent
+          ? const Value.absent()
+          : Value(userCategory),
+      userActionsJson: userActionsJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(userActionsJson),
+      reviewedAt: reviewedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(reviewedAt),
+      createdAt: Value(createdAt),
+      autoSinkStatus: autoSinkStatus == null && nullToAbsent
+          ? const Value.absent()
+          : Value(autoSinkStatus),
+    );
+  }
+
+  factory Screenshot.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Screenshot(
+      id: serializer.fromJson<int>(json['id']),
+      thumbPath: serializer.fromJson<String>(json['thumbPath']),
+      packageName: serializer.fromJson<String?>(json['packageName']),
+      windowTitle: serializer.fromJson<String?>(json['windowTitle']),
+      textPreview: serializer.fromJson<String?>(json['textPreview']),
+      inferredCategory: serializer.fromJson<String?>(json['inferredCategory']),
+      inferredConfidence: serializer.fromJson<double?>(
+        json['inferredConfidence'],
+      ),
+      inferredSummary: serializer.fromJson<String?>(json['inferredSummary']),
+      inferredJson: serializer.fromJson<String?>(json['inferredJson']),
+      userCategory: serializer.fromJson<String?>(json['userCategory']),
+      userActionsJson: serializer.fromJson<String?>(json['userActionsJson']),
+      reviewedAt: serializer.fromJson<int?>(json['reviewedAt']),
+      createdAt: serializer.fromJson<int>(json['createdAt']),
+      autoSinkStatus: serializer.fromJson<String?>(json['autoSinkStatus']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'thumbPath': serializer.toJson<String>(thumbPath),
+      'packageName': serializer.toJson<String?>(packageName),
+      'windowTitle': serializer.toJson<String?>(windowTitle),
+      'textPreview': serializer.toJson<String?>(textPreview),
+      'inferredCategory': serializer.toJson<String?>(inferredCategory),
+      'inferredConfidence': serializer.toJson<double?>(inferredConfidence),
+      'inferredSummary': serializer.toJson<String?>(inferredSummary),
+      'inferredJson': serializer.toJson<String?>(inferredJson),
+      'userCategory': serializer.toJson<String?>(userCategory),
+      'userActionsJson': serializer.toJson<String?>(userActionsJson),
+      'reviewedAt': serializer.toJson<int?>(reviewedAt),
+      'createdAt': serializer.toJson<int>(createdAt),
+      'autoSinkStatus': serializer.toJson<String?>(autoSinkStatus),
+    };
+  }
+
+  Screenshot copyWith({
+    int? id,
+    String? thumbPath,
+    Value<String?> packageName = const Value.absent(),
+    Value<String?> windowTitle = const Value.absent(),
+    Value<String?> textPreview = const Value.absent(),
+    Value<String?> inferredCategory = const Value.absent(),
+    Value<double?> inferredConfidence = const Value.absent(),
+    Value<String?> inferredSummary = const Value.absent(),
+    Value<String?> inferredJson = const Value.absent(),
+    Value<String?> userCategory = const Value.absent(),
+    Value<String?> userActionsJson = const Value.absent(),
+    Value<int?> reviewedAt = const Value.absent(),
+    int? createdAt,
+    Value<String?> autoSinkStatus = const Value.absent(),
+  }) => Screenshot(
+    id: id ?? this.id,
+    thumbPath: thumbPath ?? this.thumbPath,
+    packageName: packageName.present ? packageName.value : this.packageName,
+    windowTitle: windowTitle.present ? windowTitle.value : this.windowTitle,
+    textPreview: textPreview.present ? textPreview.value : this.textPreview,
+    inferredCategory: inferredCategory.present
+        ? inferredCategory.value
+        : this.inferredCategory,
+    inferredConfidence: inferredConfidence.present
+        ? inferredConfidence.value
+        : this.inferredConfidence,
+    inferredSummary: inferredSummary.present
+        ? inferredSummary.value
+        : this.inferredSummary,
+    inferredJson: inferredJson.present ? inferredJson.value : this.inferredJson,
+    userCategory: userCategory.present ? userCategory.value : this.userCategory,
+    userActionsJson: userActionsJson.present
+        ? userActionsJson.value
+        : this.userActionsJson,
+    reviewedAt: reviewedAt.present ? reviewedAt.value : this.reviewedAt,
+    createdAt: createdAt ?? this.createdAt,
+    autoSinkStatus: autoSinkStatus.present
+        ? autoSinkStatus.value
+        : this.autoSinkStatus,
+  );
+  Screenshot copyWithCompanion(ScreenshotsCompanion data) {
+    return Screenshot(
+      id: data.id.present ? data.id.value : this.id,
+      thumbPath: data.thumbPath.present ? data.thumbPath.value : this.thumbPath,
+      packageName: data.packageName.present
+          ? data.packageName.value
+          : this.packageName,
+      windowTitle: data.windowTitle.present
+          ? data.windowTitle.value
+          : this.windowTitle,
+      textPreview: data.textPreview.present
+          ? data.textPreview.value
+          : this.textPreview,
+      inferredCategory: data.inferredCategory.present
+          ? data.inferredCategory.value
+          : this.inferredCategory,
+      inferredConfidence: data.inferredConfidence.present
+          ? data.inferredConfidence.value
+          : this.inferredConfidence,
+      inferredSummary: data.inferredSummary.present
+          ? data.inferredSummary.value
+          : this.inferredSummary,
+      inferredJson: data.inferredJson.present
+          ? data.inferredJson.value
+          : this.inferredJson,
+      userCategory: data.userCategory.present
+          ? data.userCategory.value
+          : this.userCategory,
+      userActionsJson: data.userActionsJson.present
+          ? data.userActionsJson.value
+          : this.userActionsJson,
+      reviewedAt: data.reviewedAt.present
+          ? data.reviewedAt.value
+          : this.reviewedAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      autoSinkStatus: data.autoSinkStatus.present
+          ? data.autoSinkStatus.value
+          : this.autoSinkStatus,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Screenshot(')
+          ..write('id: $id, ')
+          ..write('thumbPath: $thumbPath, ')
+          ..write('packageName: $packageName, ')
+          ..write('windowTitle: $windowTitle, ')
+          ..write('textPreview: $textPreview, ')
+          ..write('inferredCategory: $inferredCategory, ')
+          ..write('inferredConfidence: $inferredConfidence, ')
+          ..write('inferredSummary: $inferredSummary, ')
+          ..write('inferredJson: $inferredJson, ')
+          ..write('userCategory: $userCategory, ')
+          ..write('userActionsJson: $userActionsJson, ')
+          ..write('reviewedAt: $reviewedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('autoSinkStatus: $autoSinkStatus')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    thumbPath,
+    packageName,
+    windowTitle,
+    textPreview,
+    inferredCategory,
+    inferredConfidence,
+    inferredSummary,
+    inferredJson,
+    userCategory,
+    userActionsJson,
+    reviewedAt,
+    createdAt,
+    autoSinkStatus,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Screenshot &&
+          other.id == this.id &&
+          other.thumbPath == this.thumbPath &&
+          other.packageName == this.packageName &&
+          other.windowTitle == this.windowTitle &&
+          other.textPreview == this.textPreview &&
+          other.inferredCategory == this.inferredCategory &&
+          other.inferredConfidence == this.inferredConfidence &&
+          other.inferredSummary == this.inferredSummary &&
+          other.inferredJson == this.inferredJson &&
+          other.userCategory == this.userCategory &&
+          other.userActionsJson == this.userActionsJson &&
+          other.reviewedAt == this.reviewedAt &&
+          other.createdAt == this.createdAt &&
+          other.autoSinkStatus == this.autoSinkStatus);
+}
+
+class ScreenshotsCompanion extends UpdateCompanion<Screenshot> {
+  final Value<int> id;
+  final Value<String> thumbPath;
+  final Value<String?> packageName;
+  final Value<String?> windowTitle;
+  final Value<String?> textPreview;
+  final Value<String?> inferredCategory;
+  final Value<double?> inferredConfidence;
+  final Value<String?> inferredSummary;
+  final Value<String?> inferredJson;
+  final Value<String?> userCategory;
+  final Value<String?> userActionsJson;
+  final Value<int?> reviewedAt;
+  final Value<int> createdAt;
+  final Value<String?> autoSinkStatus;
+  const ScreenshotsCompanion({
+    this.id = const Value.absent(),
+    this.thumbPath = const Value.absent(),
+    this.packageName = const Value.absent(),
+    this.windowTitle = const Value.absent(),
+    this.textPreview = const Value.absent(),
+    this.inferredCategory = const Value.absent(),
+    this.inferredConfidence = const Value.absent(),
+    this.inferredSummary = const Value.absent(),
+    this.inferredJson = const Value.absent(),
+    this.userCategory = const Value.absent(),
+    this.userActionsJson = const Value.absent(),
+    this.reviewedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.autoSinkStatus = const Value.absent(),
+  });
+  ScreenshotsCompanion.insert({
+    this.id = const Value.absent(),
+    required String thumbPath,
+    this.packageName = const Value.absent(),
+    this.windowTitle = const Value.absent(),
+    this.textPreview = const Value.absent(),
+    this.inferredCategory = const Value.absent(),
+    this.inferredConfidence = const Value.absent(),
+    this.inferredSummary = const Value.absent(),
+    this.inferredJson = const Value.absent(),
+    this.userCategory = const Value.absent(),
+    this.userActionsJson = const Value.absent(),
+    this.reviewedAt = const Value.absent(),
+    required int createdAt,
+    this.autoSinkStatus = const Value.absent(),
+  }) : thumbPath = Value(thumbPath),
+       createdAt = Value(createdAt);
+  static Insertable<Screenshot> custom({
+    Expression<int>? id,
+    Expression<String>? thumbPath,
+    Expression<String>? packageName,
+    Expression<String>? windowTitle,
+    Expression<String>? textPreview,
+    Expression<String>? inferredCategory,
+    Expression<double>? inferredConfidence,
+    Expression<String>? inferredSummary,
+    Expression<String>? inferredJson,
+    Expression<String>? userCategory,
+    Expression<String>? userActionsJson,
+    Expression<int>? reviewedAt,
+    Expression<int>? createdAt,
+    Expression<String>? autoSinkStatus,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (thumbPath != null) 'thumb_path': thumbPath,
+      if (packageName != null) 'package_name': packageName,
+      if (windowTitle != null) 'window_title': windowTitle,
+      if (textPreview != null) 'text_preview': textPreview,
+      if (inferredCategory != null) 'inferred_category': inferredCategory,
+      if (inferredConfidence != null) 'inferred_confidence': inferredConfidence,
+      if (inferredSummary != null) 'inferred_summary': inferredSummary,
+      if (inferredJson != null) 'inferred_json': inferredJson,
+      if (userCategory != null) 'user_category': userCategory,
+      if (userActionsJson != null) 'user_actions_json': userActionsJson,
+      if (reviewedAt != null) 'reviewed_at': reviewedAt,
+      if (createdAt != null) 'created_at': createdAt,
+      if (autoSinkStatus != null) 'auto_sink_status': autoSinkStatus,
+    });
+  }
+
+  ScreenshotsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? thumbPath,
+    Value<String?>? packageName,
+    Value<String?>? windowTitle,
+    Value<String?>? textPreview,
+    Value<String?>? inferredCategory,
+    Value<double?>? inferredConfidence,
+    Value<String?>? inferredSummary,
+    Value<String?>? inferredJson,
+    Value<String?>? userCategory,
+    Value<String?>? userActionsJson,
+    Value<int?>? reviewedAt,
+    Value<int>? createdAt,
+    Value<String?>? autoSinkStatus,
+  }) {
+    return ScreenshotsCompanion(
+      id: id ?? this.id,
+      thumbPath: thumbPath ?? this.thumbPath,
+      packageName: packageName ?? this.packageName,
+      windowTitle: windowTitle ?? this.windowTitle,
+      textPreview: textPreview ?? this.textPreview,
+      inferredCategory: inferredCategory ?? this.inferredCategory,
+      inferredConfidence: inferredConfidence ?? this.inferredConfidence,
+      inferredSummary: inferredSummary ?? this.inferredSummary,
+      inferredJson: inferredJson ?? this.inferredJson,
+      userCategory: userCategory ?? this.userCategory,
+      userActionsJson: userActionsJson ?? this.userActionsJson,
+      reviewedAt: reviewedAt ?? this.reviewedAt,
+      createdAt: createdAt ?? this.createdAt,
+      autoSinkStatus: autoSinkStatus ?? this.autoSinkStatus,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (thumbPath.present) {
+      map['thumb_path'] = Variable<String>(thumbPath.value);
+    }
+    if (packageName.present) {
+      map['package_name'] = Variable<String>(packageName.value);
+    }
+    if (windowTitle.present) {
+      map['window_title'] = Variable<String>(windowTitle.value);
+    }
+    if (textPreview.present) {
+      map['text_preview'] = Variable<String>(textPreview.value);
+    }
+    if (inferredCategory.present) {
+      map['inferred_category'] = Variable<String>(inferredCategory.value);
+    }
+    if (inferredConfidence.present) {
+      map['inferred_confidence'] = Variable<double>(inferredConfidence.value);
+    }
+    if (inferredSummary.present) {
+      map['inferred_summary'] = Variable<String>(inferredSummary.value);
+    }
+    if (inferredJson.present) {
+      map['inferred_json'] = Variable<String>(inferredJson.value);
+    }
+    if (userCategory.present) {
+      map['user_category'] = Variable<String>(userCategory.value);
+    }
+    if (userActionsJson.present) {
+      map['user_actions_json'] = Variable<String>(userActionsJson.value);
+    }
+    if (reviewedAt.present) {
+      map['reviewed_at'] = Variable<int>(reviewedAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<int>(createdAt.value);
+    }
+    if (autoSinkStatus.present) {
+      map['auto_sink_status'] = Variable<String>(autoSinkStatus.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ScreenshotsCompanion(')
+          ..write('id: $id, ')
+          ..write('thumbPath: $thumbPath, ')
+          ..write('packageName: $packageName, ')
+          ..write('windowTitle: $windowTitle, ')
+          ..write('textPreview: $textPreview, ')
+          ..write('inferredCategory: $inferredCategory, ')
+          ..write('inferredConfidence: $inferredConfidence, ')
+          ..write('inferredSummary: $inferredSummary, ')
+          ..write('inferredJson: $inferredJson, ')
+          ..write('userCategory: $userCategory, ')
+          ..write('userActionsJson: $userActionsJson, ')
+          ..write('reviewedAt: $reviewedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('autoSinkStatus: $autoSinkStatus')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $DemoItemsTable extends DemoItems
     with TableInfo<$DemoItemsTable, DemoItem> {
   @override
@@ -10793,6 +11668,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $BriefingsTable briefings = $BriefingsTable(this);
   late final $MemoriesTable memories = $MemoriesTable(this);
   late final $UserProfilesTable userProfiles = $UserProfilesTable(this);
+  late final $ScreenshotsTable screenshots = $ScreenshotsTable(this);
   late final $DemoItemsTable demoItems = $DemoItemsTable(this);
   late final RelationshipDao relationshipDao = RelationshipDao(
     this as AppDatabase,
@@ -10802,6 +11678,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final ThoughtDao thoughtDao = ThoughtDao(this as AppDatabase);
   late final HealthDao healthDao = HealthDao(this as AppDatabase);
   late final AiDao aiDao = AiDao(this as AppDatabase);
+  late final ScreenshotDao screenshotDao = ScreenshotDao(this as AppDatabase);
   late final DemoDao demoDao = DemoDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -10829,6 +11706,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     briefings,
     memories,
     userProfiles,
+    screenshots,
     demoItems,
   ];
   @override
@@ -17224,6 +18102,393 @@ typedef $$UserProfilesTableProcessedTableManager =
       UserProfile,
       PrefetchHooks Function()
     >;
+typedef $$ScreenshotsTableCreateCompanionBuilder =
+    ScreenshotsCompanion Function({
+      Value<int> id,
+      required String thumbPath,
+      Value<String?> packageName,
+      Value<String?> windowTitle,
+      Value<String?> textPreview,
+      Value<String?> inferredCategory,
+      Value<double?> inferredConfidence,
+      Value<String?> inferredSummary,
+      Value<String?> inferredJson,
+      Value<String?> userCategory,
+      Value<String?> userActionsJson,
+      Value<int?> reviewedAt,
+      required int createdAt,
+      Value<String?> autoSinkStatus,
+    });
+typedef $$ScreenshotsTableUpdateCompanionBuilder =
+    ScreenshotsCompanion Function({
+      Value<int> id,
+      Value<String> thumbPath,
+      Value<String?> packageName,
+      Value<String?> windowTitle,
+      Value<String?> textPreview,
+      Value<String?> inferredCategory,
+      Value<double?> inferredConfidence,
+      Value<String?> inferredSummary,
+      Value<String?> inferredJson,
+      Value<String?> userCategory,
+      Value<String?> userActionsJson,
+      Value<int?> reviewedAt,
+      Value<int> createdAt,
+      Value<String?> autoSinkStatus,
+    });
+
+class $$ScreenshotsTableFilterComposer
+    extends Composer<_$AppDatabase, $ScreenshotsTable> {
+  $$ScreenshotsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get thumbPath => $composableBuilder(
+    column: $table.thumbPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get packageName => $composableBuilder(
+    column: $table.packageName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get windowTitle => $composableBuilder(
+    column: $table.windowTitle,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get textPreview => $composableBuilder(
+    column: $table.textPreview,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get inferredCategory => $composableBuilder(
+    column: $table.inferredCategory,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get inferredConfidence => $composableBuilder(
+    column: $table.inferredConfidence,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get inferredSummary => $composableBuilder(
+    column: $table.inferredSummary,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get inferredJson => $composableBuilder(
+    column: $table.inferredJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userCategory => $composableBuilder(
+    column: $table.userCategory,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get userActionsJson => $composableBuilder(
+    column: $table.userActionsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get reviewedAt => $composableBuilder(
+    column: $table.reviewedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get autoSinkStatus => $composableBuilder(
+    column: $table.autoSinkStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ScreenshotsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ScreenshotsTable> {
+  $$ScreenshotsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get thumbPath => $composableBuilder(
+    column: $table.thumbPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get packageName => $composableBuilder(
+    column: $table.packageName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get windowTitle => $composableBuilder(
+    column: $table.windowTitle,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get textPreview => $composableBuilder(
+    column: $table.textPreview,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get inferredCategory => $composableBuilder(
+    column: $table.inferredCategory,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get inferredConfidence => $composableBuilder(
+    column: $table.inferredConfidence,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get inferredSummary => $composableBuilder(
+    column: $table.inferredSummary,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get inferredJson => $composableBuilder(
+    column: $table.inferredJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userCategory => $composableBuilder(
+    column: $table.userCategory,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get userActionsJson => $composableBuilder(
+    column: $table.userActionsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get reviewedAt => $composableBuilder(
+    column: $table.reviewedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get autoSinkStatus => $composableBuilder(
+    column: $table.autoSinkStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ScreenshotsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ScreenshotsTable> {
+  $$ScreenshotsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get thumbPath =>
+      $composableBuilder(column: $table.thumbPath, builder: (column) => column);
+
+  GeneratedColumn<String> get packageName => $composableBuilder(
+    column: $table.packageName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get windowTitle => $composableBuilder(
+    column: $table.windowTitle,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get textPreview => $composableBuilder(
+    column: $table.textPreview,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get inferredCategory => $composableBuilder(
+    column: $table.inferredCategory,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get inferredConfidence => $composableBuilder(
+    column: $table.inferredConfidence,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get inferredSummary => $composableBuilder(
+    column: $table.inferredSummary,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get inferredJson => $composableBuilder(
+    column: $table.inferredJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get userCategory => $composableBuilder(
+    column: $table.userCategory,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get userActionsJson => $composableBuilder(
+    column: $table.userActionsJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get reviewedAt => $composableBuilder(
+    column: $table.reviewedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get autoSinkStatus => $composableBuilder(
+    column: $table.autoSinkStatus,
+    builder: (column) => column,
+  );
+}
+
+class $$ScreenshotsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ScreenshotsTable,
+          Screenshot,
+          $$ScreenshotsTableFilterComposer,
+          $$ScreenshotsTableOrderingComposer,
+          $$ScreenshotsTableAnnotationComposer,
+          $$ScreenshotsTableCreateCompanionBuilder,
+          $$ScreenshotsTableUpdateCompanionBuilder,
+          (
+            Screenshot,
+            BaseReferences<_$AppDatabase, $ScreenshotsTable, Screenshot>,
+          ),
+          Screenshot,
+          PrefetchHooks Function()
+        > {
+  $$ScreenshotsTableTableManager(_$AppDatabase db, $ScreenshotsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ScreenshotsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ScreenshotsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ScreenshotsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> thumbPath = const Value.absent(),
+                Value<String?> packageName = const Value.absent(),
+                Value<String?> windowTitle = const Value.absent(),
+                Value<String?> textPreview = const Value.absent(),
+                Value<String?> inferredCategory = const Value.absent(),
+                Value<double?> inferredConfidence = const Value.absent(),
+                Value<String?> inferredSummary = const Value.absent(),
+                Value<String?> inferredJson = const Value.absent(),
+                Value<String?> userCategory = const Value.absent(),
+                Value<String?> userActionsJson = const Value.absent(),
+                Value<int?> reviewedAt = const Value.absent(),
+                Value<int> createdAt = const Value.absent(),
+                Value<String?> autoSinkStatus = const Value.absent(),
+              }) => ScreenshotsCompanion(
+                id: id,
+                thumbPath: thumbPath,
+                packageName: packageName,
+                windowTitle: windowTitle,
+                textPreview: textPreview,
+                inferredCategory: inferredCategory,
+                inferredConfidence: inferredConfidence,
+                inferredSummary: inferredSummary,
+                inferredJson: inferredJson,
+                userCategory: userCategory,
+                userActionsJson: userActionsJson,
+                reviewedAt: reviewedAt,
+                createdAt: createdAt,
+                autoSinkStatus: autoSinkStatus,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String thumbPath,
+                Value<String?> packageName = const Value.absent(),
+                Value<String?> windowTitle = const Value.absent(),
+                Value<String?> textPreview = const Value.absent(),
+                Value<String?> inferredCategory = const Value.absent(),
+                Value<double?> inferredConfidence = const Value.absent(),
+                Value<String?> inferredSummary = const Value.absent(),
+                Value<String?> inferredJson = const Value.absent(),
+                Value<String?> userCategory = const Value.absent(),
+                Value<String?> userActionsJson = const Value.absent(),
+                Value<int?> reviewedAt = const Value.absent(),
+                required int createdAt,
+                Value<String?> autoSinkStatus = const Value.absent(),
+              }) => ScreenshotsCompanion.insert(
+                id: id,
+                thumbPath: thumbPath,
+                packageName: packageName,
+                windowTitle: windowTitle,
+                textPreview: textPreview,
+                inferredCategory: inferredCategory,
+                inferredConfidence: inferredConfidence,
+                inferredSummary: inferredSummary,
+                inferredJson: inferredJson,
+                userCategory: userCategory,
+                userActionsJson: userActionsJson,
+                reviewedAt: reviewedAt,
+                createdAt: createdAt,
+                autoSinkStatus: autoSinkStatus,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ScreenshotsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ScreenshotsTable,
+      Screenshot,
+      $$ScreenshotsTableFilterComposer,
+      $$ScreenshotsTableOrderingComposer,
+      $$ScreenshotsTableAnnotationComposer,
+      $$ScreenshotsTableCreateCompanionBuilder,
+      $$ScreenshotsTableUpdateCompanionBuilder,
+      (
+        Screenshot,
+        BaseReferences<_$AppDatabase, $ScreenshotsTable, Screenshot>,
+      ),
+      Screenshot,
+      PrefetchHooks Function()
+    >;
 typedef $$DemoItemsTableCreateCompanionBuilder =
     DemoItemsCompanion Function({
       Value<int> id,
@@ -17438,6 +18703,8 @@ class $AppDatabaseManager {
       $$MemoriesTableTableManager(_db, _db.memories);
   $$UserProfilesTableTableManager get userProfiles =>
       $$UserProfilesTableTableManager(_db, _db.userProfiles);
+  $$ScreenshotsTableTableManager get screenshots =>
+      $$ScreenshotsTableTableManager(_db, _db.screenshots);
   $$DemoItemsTableTableManager get demoItems =>
       $$DemoItemsTableTableManager(_db, _db.demoItems);
 }

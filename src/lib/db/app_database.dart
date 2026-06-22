@@ -1,5 +1,7 @@
 import 'package:drift/drift.dart';
 
+import '../features/screenshot/db/screenshot_dao.dart';
+import '../features/screenshot/db/screenshot_tables.dart';
 import '../modules/butler/db/ai_daos.dart';
 import '../modules/butler/db/ai_tables.dart';
 import '../modules/demo/db/demo_daos.dart';
@@ -55,6 +57,8 @@ part 'app_database.g.dart';
     Briefings,
     Memories,
     UserProfiles,
+    // Step 9 + Step 10 截图
+    Screenshots,
     // Demo 模块（模块化验证）
     DemoItems,
   ],
@@ -65,6 +69,7 @@ part 'app_database.g.dart';
     ThoughtDao,
     HealthDao,
     AiDao,
+    ScreenshotDao,
     DemoDao,
   ],
 )
@@ -89,7 +94,7 @@ class AppDatabase extends _$AppDatabase {
   static set I(AppDatabase value) => _instance = value;
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -99,8 +104,11 @@ class AppDatabase extends _$AppDatabase {
       await VectorStore(this).ensureTable();
     },
     onUpgrade: (m, from, to) async {
-      // 占位：Step 2 仅有 v1，后续 Step 真正增加 schemaVersion 时按步迁移。
-      // 示例：from=1, to=2 时执行 customStatement 添加字段。
+      // Step 9 + Step 10：v1 → v3 一次性加 screenshots 表（含 autoSinkStatus 字段）
+      // 老用户数据库没有 screenshots 表——一次性 createTable 会包含全部字段
+      if (from < 3) {
+        await m.createTable(screenshots);
+      }
     },
     beforeOpen: (details) async {
       // 启用外键约束（Drift 默认未开启）

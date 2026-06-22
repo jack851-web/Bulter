@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  悬浮球布局（Step 10）。
+  - 状态 A（ball_icon）：48dp 圆形球（空闲/成功/失败）
+  - 状态 B（ball_loading_bar）：160dp × 40dp 横向胶囊 + 加载文字
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="48dp"
+    android:layout_height="48dp"
+    android:background="@drawable/bulter_floating_bg">
+
+    <ImageView
+        android:id="@+id/ball_icon"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_gravity="center"
+        android:src="@android:drawable/ic_menu_compass"
+        android:contentDescription="Bulter 悬浮球"
+        android:visibility="visible" />
+
+    <LinearLayout
+        android:id="@+id/ball_loading_bar"
+        android:layout_width="160dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="8dp"
+        android:background="@drawable/bulter_floating_loading_bg"
+        android:visibility="gone">
+
+        <ProgressBar
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:indeterminate="true"
+            android:indeterminateTint="@android:color/white" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="处理中..."
+            android:textColor="@android:color/white"
+            android:textSize="12sp" />
+    </LinearLayout>
+</FrameLayout>

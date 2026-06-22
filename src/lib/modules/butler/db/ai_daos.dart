@@ -65,6 +65,8 @@ class AiDao extends DatabaseAccessor<AppDatabase> with _$AiDaoMixin {
 
   // —— Memories ——
   Future<int> insertMemory(MemoriesCompanion m) => into(memories).insert(m);
+  Future<int> deleteMemory(int id) =>
+      (delete(memories)..where((m) => m.id.equals(id))).go();
   Stream<List<Memory>> watchMemories() {
     return (select(memories)..orderBy([
           (m) => OrderingTerm(expression: m.createdAt, mode: OrderingMode.desc),

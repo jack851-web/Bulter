@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="accessibility_service_description">Bulter 通过无障碍服务监听窗口变化 + 提供系统级截图。仅在你主动触发时使用，不会上传任何数据。</string>
+</resources>
