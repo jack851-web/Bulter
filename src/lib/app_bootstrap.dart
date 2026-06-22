@@ -32,7 +32,10 @@ import 'storage/storage_init.dart';
 ///
 /// [subdir] 用于指定 Hive / SQLite 子目录；测试场景下可传临时目录，
 /// 避免 path_provider / 权限问题。
-Future<void> bootstrapApp({String? subdir}) async {
+///
+/// [enableScheduler] 默认 true；测试场景下传 false 跳过 [BriefingScheduler.start]
+/// 避免 Timer.periodic 阻止 `flutter test` 退出。
+Future<void> bootstrapApp({String? subdir, bool enableScheduler = true}) async {
   // 1. Hive 初始化（必须在 runApp 之前；模块按需懒打开自己的 Box）
   await initStorage(subdir: subdir);
 
@@ -82,7 +85,9 @@ Future<void> bootstrapApp({String? subdir}) async {
 
   // 5. 简报系统初始化（Step 9）：先打开 Hive Box + 从 Drift 加载缓存，再启动调度器
   await BriefingStore.instance.init();
-  BriefingScheduler.instance.start();
+  if (enableScheduler) {
+    BriefingScheduler.instance.start();
+  }
 }
 
 /// 初始化 RAG 子系统（Step 6）。

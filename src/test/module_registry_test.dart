@@ -4,10 +4,13 @@
 
 import 'dart:io';
 
+import 'package:bulter/ai/briefing/briefing_scheduler.dart';
 import 'package:bulter/app_bootstrap.dart';
+import 'package:bulter/db/app_database.dart';
 import 'package:bulter/modules/bulter_module.dart';
 import 'package:bulter/modules/registry.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -18,13 +21,29 @@ void main() {
   });
 
   tearDown(() async {
+    // 显式关闭数据库 + 调度器（避免 Windows 下文件句柄未释放导致删除失败）
+    try {
+      AppDatabase.I.close();
+    } catch (_) {}
+    try {
+      BriefingScheduler.instance.stop();
+    } catch (_) {}
+    await Hive.close();
     if (tempDir.existsSync()) {
-      await tempDir.delete(recursive: true);
+      for (var i = 0; i < 3; i++) {
+        try {
+          await tempDir.delete(recursive: true);
+          break;
+        } catch (_) {
+          await Future.delayed(const Duration(milliseconds: 100));
+        }
+      }
     }
   });
 
   test('bootstrapApp 注册 7 个模块（含 Demo）', () async {
-    await bootstrapApp(subdir: tempDir.path);
+    // 测试环境跳过 BriefingScheduler（避免 Timer.periodic 阻止 test 退出）
+    await bootstrapApp(subdir: tempDir.path, enableScheduler: false);
     final registry = ModuleRegistry.instance;
     expect(registry.capsuleModules.length, 7);
 
